@@ -3,13 +3,7 @@ eoFunctions
 ===========
 
 
-Add a short description here!
-
-
-Description
-===========
-
-A longer description of your project goes here...
+eoFunctions is a collection of geo-physical functions developed for Earth Observation satellite data.
 
 
 Note
