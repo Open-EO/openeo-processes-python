@@ -1,26 +1,34 @@
+"""
+This module contains the ndvi function, which calculates the
+Normalized Difference Vegetation Index.
+"""
+
+
 import numpy as np
 from osgeo import gdal
 
 
-def ndvi(datasets, from_file='OFF'):
+def ndvi(rasters):
     """
-    Given data from the NIR and red bands, calculate the Normalized Diffrence Vegetation Index.
+    Given data from the red and NIR bands (as 2D numpy arrays), it calculates
+    the Normalized Difference Vegetation Index (NDVI).
 
-    datasets -- A list of two filenames or 2d numpy arrays as follows [NIR_data, red_data]
-    from_file -- If 'datasets' contains filenames, must be set to 'ON'
+    Parameters
+    ----------
+    rasters : list
+    A list of two 2D numpy arrays as follows [red_data, NIR_data]
+
+    Returns
+    -------
+    ndvi_output : 2D numpy array
+    NDVI
     """
 
     # Allow division by zero
     np.seterr(divide='ignore', invalid='ignore')
 
-    if from_file == 'ON':
-        ds0 = gdal.Open(datasets[0])
-        nir = ds0.ReadAsAraay()
-        ds1 = gdal.Open(datasets[1])
-        red = ds1.ReadAsAraay()
-    else:
-        nir = datasets[0]
-        red = datasets[1]
+    red = rasters[0]
+    nir = rasters[1]
 
     numerator = (nir - red)
     denominator = (nir + red)
