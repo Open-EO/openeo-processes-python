@@ -32,7 +32,7 @@ def ndvi(rasters):
 
     numerator = (nir - red)
     denominator = (nir + red)
-    denominator[denominator == 0] = np.nan
+    denominator[denominator == 0] = 9999
     ndvi_output = numerator / denominator
 
     return ndvi_output
