@@ -1,6 +1,7 @@
 """
 Code that can be used for filtering the data. Returns a boolean array where the values that satisfied the
-given filter criteria are represented by True and those that did not by False.
+given filter criteria are represented by True and those that did not by False. Should correspond to some of the codes in
+https://open-eo.github.io/openeo-api/v/0.4.0/processreference/ - in comparison the gt, gte, lt, lte and between functions
 """
 
 
@@ -8,7 +9,7 @@ import sys
 import numpy as np
 
 
-def compare(in_array, filter_type, limits):
+def comparison(in_array, filter_type, limits):
     """
     Filters the raster of data returning a boolean array with results.
     Filter types available: 'lt', 'lte', 'gt', 'gte' and 'between'
@@ -29,6 +30,7 @@ def compare(in_array, filter_type, limits):
             err_message = 'For filter type between, the limits have to be a list of 2 numbers (int or float)'
             sys.exit(err_message)
 
+    # creating the output array for various filter types
     if filter_type == 'lt':
         out_array = in_array < limits
     elif filter_type == 'lte':
