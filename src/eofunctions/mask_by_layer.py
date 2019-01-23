@@ -7,29 +7,31 @@ import sys
 import numpy as np
 
 
-def mask(in_array, mask, replacement = np.nan):
+def mask_by_layer(rasters, replacement = np.nan):
     """
-    Applies a mask to an array. It replaces all elements of the array that are non-zero (for numbers) or true
+    Applies a mask to the specified layers. The mask needs to be the last layer of the specified layers. The same mask
+    is applied to all layers. It replaces all elements of the array that are non-zero (for numbers) or true
     (for boolean) in mask. These elements are replaced with the value specified for replacement, which defaults to
     np.nan value. Caution - the data type is converted to float in case, that the replacement is set to np.nan!
     """
 
-    # Convert to 2d numpy array if input comes from gdal pixel function
-    if (isinstance(in_array, (list, tuple))) and (len(in_array) == 1):
-        in_array = in_array[0]
+    in_array = rasters[0:-1]
+    mask = rasters[-1]
 
     # Sanity check
-    if mask.shape != in_array.shape:
-        err_message = 'The shape of the input array and mask array has to match'
+    if mask.shape[-2:] != in_array.shape[-2:]:
+        err_message = 'The shape of each layer of the input array and mask array has to match'
         sys.exit(err_message)
 
     if replacement is np.nan:
         in_array = in_array.astype('float')
 
     if mask.dtype in ['bool']:
-        in_array[np.where(mask == True)] = replacement
+        for layer in in_array:
+            layer[np.where(mask == True)] = replacement
     elif mask.dtype in ['int16', 'int32', 'int64', 'int8', 'uint16', 'uint32', 'uint64', 'uint8', 'float64', 'float32']:
-        in_array[np.where(mask != 0)] = replacement
+        for layer in in_array:
+            layer[np.where(mask != 0)] = replacement
     else:
         err_message = 'unknown dtype of the mask array'
         sys.exit(err_message)
@@ -37,11 +39,8 @@ def mask(in_array, mask, replacement = np.nan):
     return in_array
 
 
-#in_array = np.array([[1,2,3],[4,5,6],[7,8,9]])
-#import filter as filter
-
-#in_array = np.array([[1,2,3],[4,5,6],[7,8,9]])
-#masked = mask(in_array, filter.filter_numeric(in_array, 'lte', 5))
 
 
+#rasters = np.array([[[1,2,3],[4,5,6],[7,8,9]],[[True,False,False],[False,True,False],[False,False,True]]])
+#masked = mask_by_layer(rasters)
 #print(masked)
