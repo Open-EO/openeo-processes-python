@@ -15,6 +15,10 @@ def mask_by_layer(rasters, replacement = np.nan):
     np.nan value. Caution - the data type is converted to float in case, that the replacement is set to np.nan!
     """
 
+    # Convert to 3d numpy array if input comes from gdal pixel function
+    if (isinstance(in_array, (list, tuple))) and (len(in_array) == 1):
+        in_array = in_array[0]
+
     in_array = rasters[0:-1]
     mask = rasters[-1]
 
