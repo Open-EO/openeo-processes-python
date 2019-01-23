@@ -41,8 +41,7 @@ def mask(in_array, mask, replacement = np.nan):
 #import filter as filter
 
 #in_array = np.array([[1,2,3],[4,5,6],[7,8,9]])
-#mask_image = filter.filter_numeric(in_array, 'lte', 5)
-#masked = mask(in_array, mask_image)
+#masked = mask(in_array, filter.filter_numeric(in_array, 'lte', 5))
 
 
 #print(masked)

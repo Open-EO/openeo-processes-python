@@ -8,7 +8,7 @@ import sys
 import numpy as np
 
 
-def filter_numeric(in_array, filter_type, limits):
+def filter(in_array, filter_type, limits):
     """
     Filters the raster of data returning a boolean array with results.
     Filter types available: 'lt', 'lte', 'gt', 'gte' and 'between'
