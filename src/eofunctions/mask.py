@@ -43,7 +43,7 @@ def mask(rasters, mask_type, expression = '', replacement = np.nan):
 
     # masking using last layer of the input rasters
     if mask_type in ['layer']:
-        in_array = rasters[0:-1]
+        in_array = rasters[:-1]
         mask_array = rasters[-1]
 
         # converting the data to a float type in case that the replacement value is np.nan

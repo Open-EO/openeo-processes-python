@@ -42,8 +42,3 @@ def comparison(in_array, filter_type, limits):
     elif filter_type == 'between':
         out_array = (in_array >= limits[0]) & (in_array <= limits[1])
     return out_array
-
-
-#in_array = np.array([[1,2,3],[4,5,6],[7,8,9]])
-#out_array = filter_numeric(in_array, 'lte', 5)
-#print(out_array)
