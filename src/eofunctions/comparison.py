@@ -42,3 +42,6 @@ def comparison(in_array, filter_type, limits):
     elif filter_type == 'between':
         out_array = (in_array >= limits[0]) & (in_array <= limits[1])
     return out_array
+
+def _if(expression, accept, reject):
+    return accept if expression else reject
