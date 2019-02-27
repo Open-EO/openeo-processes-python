@@ -1,22 +1,28 @@
-import math
 import sys
 import numpy as np
-from eofunctions.arrays import is_empty
+
 
 def e():
     return np.e
 
+
 def pi():
     return np.pi
 
+
 def is_nan(x):
-    return np.isnan(x)
+    if isinstance(x, (int, float, np.ndarray)):
+        return np.isnan(x)
+    else:
+        return True
+
 
 def is_nodata(x):
-    if x not in [np.nan, None]:
+    if x in [np.nan, None]:
         return True
     else:
         return False
+
 
 def is_valid(x):
     if x not in [np.nan, np.inf, None]:
@@ -24,66 +30,82 @@ def is_valid(x):
     else:
         return False
 
-def _int(x):
+
+def is_empty(data):
+    if len(data) == 0:
+        return True
+    else:
+        return False
+
+
+def int_(x):
     return np.int(x)
+
 
 def floor(x):
     return np.floor(x)
 
+
 def ceil(x):
     return np.ceil(x)
 
-def round(x):
-    return np.round(x)
 
-def min(data, ignore_nodata=True):
+def round_(x, p=0):
+    return round(x, p)
+
+
+def min_(data, ignore_nodata=True):
     if is_empty(data):
-        return None
+        return np.nan
 
     if not ignore_nodata:
         return np.min(data)
     else:
         return np.nanmin(data)
 
-def max(data, ignore_nodata=True):
+
+def max_(data, ignore_nodata=True):
     if is_empty(data):
-        return None
+        return np.nan
 
     if not ignore_nodata:
         return np.max(data)
     else:
         return np.nanmax(data)
 
+
 def mean(data, ignore_nodata=True):
     if is_empty(data):
-        return None
+        return np.nan
 
     if not ignore_nodata:
         return np.mean(data)
     else:
         return np.nanmean(data)
 
+
 def median(data, ignore_nodata=True):
-    return quantiles(data, probabilities=[0.5], ignore_nodata=ignore_nodata)
+    return quantiles(data, probabilities=[0.5], ignore_nodata=ignore_nodata)[0]
 
 
 def sd(data, ignore_nodata=True):
     if is_empty(data):
-        return None
+        return np.nan
 
     if not ignore_nodata:
-        return np.std(data)
+        return np.std(data, ddof=1)
     else:
-        return np.nanstd(data)
+        return np.nanstd(data, ddof=1)
+
 
 def variance(data, ignore_nodata=True):
     if is_empty(data):
-        return None
+        return np.nan
 
     if not ignore_nodata:
-        return np.var(data)
+        return np.var(data, ddof=1)
     else:
-        return np.nanvar(data)
+        return np.nanvar(data, ddof=1)
 
 
 def quantiles(data, probabilities=None, q=None, ignore_nodata=True):
@@ -93,58 +115,73 @@ def quantiles(data, probabilities=None, q=None, ignore_nodata=True):
 
     if probabilities is not None:
         if is_empty(data):
-            return [None] * len(probabilities)
+            return [np.nan] * len(probabilities)
         if not ignore_nodata:
             return np.percentile(data, (np.array(probabilities)*100.).tolist()).tolist()
         else:
             return np.nanpercentile(data, (np.array(probabilities)*100.).tolist()).tolist()
     elif q is not None:
-        probabilities = list(np.arange(0, 100, 100/q))[1:]
+        probabilities = list(np.arange(0, 100, 100./q))[1:]
         if is_empty(data):
-            return [None] * len(probabilities)
+            return [np.nan] * len(probabilities)
         if not ignore_nodata:
-            return np.percentile(data, (np.array(probabilities)*100.).tolist()).tolist()
+            return np.percentile(data, probabilities).tolist()
         else:
-            return np.percentile(data, (np.array(probabilities) * 100.).tolist()).tolist()
+            return np.nanpercentile(data, probabilities).tolist()
     else:
         err_message = "The process 'quantiles' requires either the 'probabilities' or 'q' parameter to be set."
         sys.exit(err_message)
 
+
 def mod(x, y):
     if not is_valid(x) or not is_valid(y):
-        return None
+        return np.nan
     else:
         return x % y
+
 
 def absolute(x):
     return np.abs(x)
 
+
 def power(base, p):
-    return np.power(base, p)
+    if not is_valid(base) or not is_valid(p):
+        return np.nan
+    else:
+        return np.power(base, float(p))
+
 
 def sgn(x):
     return np.sign(x)
 
+
 def sqrt(x):
     return np.sqrt(x)
 
-def exp(p):
-    return np.exp(p)
 
-def ln(p):
-    return np.log(p)
+def exp(x):
+    return np.exp(x)
+
+
+def ln(x):
+    return np.log(x)
+
 
 def log(x, base):
     return np.log(x)/np.log(base)
 
+
 def cos(x):
     return np.cos(x)
+
 
 def arccos(x):
     return np.arccos(x)
 
+
 def cosh(x):
     return np.cosh(x)
+
 
 def arcosh(x):
     return np.arccosh(x)

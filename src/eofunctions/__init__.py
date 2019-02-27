@@ -7,3 +7,13 @@ try:
     __version__ = get_distribution(dist_name).version
 except DistributionNotFound:
     __version__ = 'unknown'
+
+from eofunctions.arrays import *
+from eofunctions.comparison import *
+from eofunctions.mask import *
+from eofunctions.math import *
+from eofunctions.ndvi import *
+from eofunctions.ndwi import *
+from eofunctions.temporal_statistics import *
+from eofunctions.zonal_statistics import *
+from eofunctions.texts import *

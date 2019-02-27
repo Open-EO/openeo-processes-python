@@ -4,7 +4,7 @@ import warnings
 import functools
 import operator
 import copy
-from eofunctions.math import min, max
+from eofunctions.math import min_, max_, is_empty
 
 # TODO: Flattening is applied in some function calls, is this necessary?
 # TODO: Where should the data types be checked? In each function?
@@ -15,12 +15,6 @@ def flatten(data):
         data = data.flatten()
 
     return data
-
-def is_empty(data):
-    if len(data) == 0:
-        return True
-    else:
-        return False
 
 def array_contains(data, element):
     return np.any(np.isin(element, data))
@@ -243,8 +237,8 @@ def divide(data, ignore_nodata):
 
 
 def extrema(data, ignore_nodata=True):
-    min_val = min(data, ignore_nodata=ignore_nodata)
-    max_val = max(data, ignore_nodata=ignore_nodata)
+    min_val = min_(data, ignore_nodata=ignore_nodata)
+    max_val = max_(data, ignore_nodata=ignore_nodata)
     return [min_val, max_val]
 
 
