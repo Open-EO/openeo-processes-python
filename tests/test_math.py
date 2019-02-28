@@ -1,7 +1,12 @@
 import eofunctions as eof
 import numpy as np
 
+
 # TODO: test exceptions
+def assert_list_items(list_1, list_2):
+    check_list = [True if np.isnan(list_1[i]) and np.isnan(list_2[i]) else list_1[i] == list_2[i]
+                  for i in range(len(list_1))]
+    assert np.all(check_list)
 
 
 def test_e():
@@ -227,3 +232,121 @@ def test_arctan2():
     assert eof.arctan2(y=0, x=0) == 0
     assert np.isnan(eof.arctan2(y=np.nan, x=1.5))
 
+
+def test_cummax():
+    assert_list_items(eof.cummax(data=[1, 3, 5, 3, 1]).tolist(), [1, 3, 5, 5, 5])
+    assert_list_items(eof.cummax(data=[1, 3, np.nan, 5, 1]).tolist(), [1, 3, np.nan, 5, 5])
+    assert_list_items(eof.cummax(data=[1, 3, np.nan, 5, 1], ignore_nodata=False).tolist(),
+                      [1, 3, np.nan, np.nan, np.nan])
+
+
+def test_cummin():
+    assert_list_items(eof.cummin(data=[5, 3, 1, 3, 5]).tolist(), [5, 3, 1, 1, 1])
+    assert_list_items(eof.cummin(data=[5, 3, np.nan, 1, 5]).tolist(), [5, 3, np.nan, 1, 1])
+    assert_list_items(eof.cummin(data=[5, 3, np.nan, 1, 5], ignore_nodata=False).tolist(),
+                      [5, 3, np.nan, np.nan, np.nan])
+
+
+def test_cumproduct():
+    assert_list_items(eof.cumproduct(data=[1, 3, 5, 3, 1]).tolist(), [1, 3, 15, 45, 45])
+    assert_list_items(eof.cumproduct(data=[1, 2, 3, np.nan, 3, 1]).tolist(), [1, 2, 6, np.nan, 18, 18])
+    assert_list_items(eof.cumproduct(data=[1, 2, 3, np.nan, 3, 1], ignore_nodata=False).tolist(),
+                      [1, 2, 6, np.nan, np.nan, np.nan])
+
+
+def test_cumsum():
+    assert_list_items(eof.cumsum(data=[1, 3, 5, 3, 1]).tolist(), [1, 4, 9, 12, 13])
+    assert_list_items(eof.cumsum(data=[1, 3, np.nan, 3, 1]).tolist(), [1, 4, np.nan, 7, 8])
+    assert_list_items(eof.cumsum(data=[1, 3, np.nan, 3, 1], ignore_nodata=False).tolist(),
+                      [1, 4, np.nan, np.nan, np.nan])
+
+
+def test_eq():
+    assert np.isnan(eof.eq(x=1, y=np.nan))
+    assert eof.eq(x=1, y=1) == True
+    assert eof.eq(x=1, y="1") == False
+    assert eof.eq(x=1.02, y=1, delta=0.01) == False
+    assert eof.eq(x=-1, y=-1.001, delta=0.01) == True
+    assert eof.eq(x=115, y=110, delta=10) == True
+    assert eof.eq(x="Test", y="test") == False
+    assert eof.eq(x="Test", y="test", case_sensitive=False) == True
+    assert eof.eq(x="Ä", y="ä", case_sensitive=False) == True
+    assert eof.eq(x="00:00:00+00:00", y="00:00:00Z") == True
+    assert eof.eq(x="2018-01-01T12:00:00Z", y="2018-01-01T12:00:00") == True
+    assert eof.eq(x="2018-01-01T00:00:00Z", y="2018-01-01T01:00:00+01:00") == True
+
+
+def test_neq():
+    assert np.isnan(eof.neq(x=1, y=np.nan))
+    assert eof.neq(x=1, y=1) == False
+    assert eof.neq(x=1, y="1") == True
+    assert eof.neq(x=1.02, y=1, delta=0.01) == True
+    assert eof.neq(x=-1, y=-1.001, delta=0.01) == False
+    assert eof.neq(x=115, y=110, delta=10) == False
+    assert eof.neq(x="Test", y="test") == True
+    assert eof.neq(x="Test", y="test", case_sensitive=False) == False
+    assert eof.neq(x="Ä", y="ä", case_sensitive=False) == False
+    assert eof.neq(x="00:00:00+00:00", y="00:00:00Z") == False
+    assert eof.neq(x="2018-01-01T12:00:00Z", y="2018-01-01T12:00:00") == False
+    assert eof.neq(x="2018-01-01T00:00:00Z", y="2018-01-01T01:00:00+01:00") == False
+
+
+def test_gt():
+    assert np.isnan(eof.gt(x=1, y=np.nan))
+    assert eof.gt(x=0, y=0) == False
+    assert eof.gt(x=2, y=1) == True
+    assert eof.gt(x=-0.5, y=-0.6) == True
+    assert eof.gt(x="00:00:00Z", y="00:00:00+01:00") == True
+    assert eof.gt(x="1950-01-01T00:00:00Z", y="2018-01-01T12:00:00Z") == False
+    assert eof.gt(x="2018-01-01T12:00:00+00:00", y="2018-01-01T12:00:00Z") == False
+
+
+def test_gte():
+    assert np.isnan(eof.gte(x=1, y=np.nan))
+    assert eof.gte(x=0, y=0) == True
+    assert eof.gte(x=1, y=2) == False
+    assert eof.gte(x=-0.5, y=-0.6) == True
+    assert eof.gte(x="00:00:00Z", y="00:00:00+01:00") == True
+    assert eof.gte(x="1950-01-01T00:00:00Z", y="2018-01-01T12:00:00Z") == False
+    assert eof.gte(x="2018-01-01T12:00:00+00:00", y="2018-01-01T12:00:00Z") == True
+
+
+def test_lt():
+    assert np.isnan(eof.lt(x=1, y=np.nan))
+    assert eof.lt(x=0, y=0) == False
+    assert eof.lt(x=1, y=2) == True
+    assert eof.lt(x=-0.5, y=-0.6) == False
+    assert eof.lt(x="00:00:00+01:00", y="00:00:00Z") == True
+    assert eof.lt(x="1950-01-01T00:00:00Z", y="2018-01-01T12:00:00Z") == True
+    assert eof.lt(x="2018-01-01T12:00:00+00:00", y="2018-01-01T12:00:00Z") == False
+
+
+def test_lte():
+    assert np.isnan(eof.lte(x=1, y=np.nan))
+    assert eof.lte(x=0, y=0) == True
+    assert eof.lte(x=1, y=2) == True
+    assert eof.lte(x=-0.5, y=-0.6) == False
+    assert eof.lte(x="00:00:00+01:00", y="00:00:00Z") == True
+    assert eof.lte(x="1950-01-01T00:00:00Z", y="2018-01-01T12:00:00Z") == True
+    assert eof.lte(x="2018-01-01T12:00:00+00:00", y="2018-01-01T12:00:00Z") == True
+
+
+def test_between():
+    assert np.isnan(eof.between(x=np.nan, min=0, max=1))
+    assert eof.between(x=0.5, min=1, max=0) == False
+    assert eof.between(x=-0.5, min=0, max=-1) == False
+    assert eof.between(x="00:00:01-01:00", min="00:00:00Z", max="02:00:02+01:00") == True
+    assert eof.between(x="2018-07-23T17:22:45Z", min="2018-01-01T00:00:00Z", max="2018-12-31T23:59:59Z") == True
+    assert eof.between(x="2000-01-01", min="2018-01-01", max="2020-01-01") == False
+    assert eof.between(x="2018-12-31T17:22:45Z", min="2018-01-01", max="2018-12-31") == False
+
+
+def test_linear_scale_range():
+    assert eof.linear_scale_range(x=0.3, input_min=-1, input_max=1, output_min=0, output_max=255) == 165.75
+    assert eof.linear_scale_range(x=25.5, input_min=0, input_max=255) == 0.1
+    assert np.isnan(eof.linear_scale_range(x=np.nan, input_min=0, input_max=100))
+
+
+def test_apply_factor():
+    arr = np.random.randn(10)
+    assert np.any(eof.apply_factor(arr) == arr)

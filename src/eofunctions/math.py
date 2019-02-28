@@ -1,6 +1,6 @@
 import sys
 import numpy as np
-
+from eofunctions.texts import str2time
 
 def e():
     return np.e
@@ -186,127 +186,207 @@ def cosh(x):
 def arcosh(x):
     return np.arccosh(x)
 
+
 def sin(x):
     return np.sin(x)
+
 
 def arcsin(x):
     return np.arcsin(x)
 
+
 def sinh(x):
     return np.sinh(x)
+
 
 def arsinh(x):
     return np.arcsinh(x)
 
+
 def tan(x):
     return np.tan(x)
+
 
 def arctan(x):
     return np.arctan(x)
 
+
 def tanh(x):
     return np.tanh(x)
+
 
 def artanh(x):
     return np.arctanh(x)
 
+
 def arctan2(y, x):
     return np.arctan2(y, x)
 
+
 def cummax(data, ignore_nodata=True):
     if is_empty(data):
-        return None
+        return np.nan
 
     if not ignore_nodata:
         return np.maximum.accumulate(data)
     else:
+        data = np.array(data)
         nan_idxs = np.isnan(data)
-        data[nan_idxs] = np.min(data)
-        data_cummax = np.maximum.accumulate(data)
+        data[nan_idxs] = np.nanmin(data)
+        data_cummax = np.maximum.accumulate(data).astype(float)
         data_cummax[nan_idxs] = np.nan
         return data_cummax
 
+
 def cummin(data, ignore_nodata=True):
     if is_empty(data):
-        return None
+        return np.nan
 
     if not ignore_nodata:
         return np.minimum.accumulate(data)
     else:
+        data = np.array(data)
         nan_idxs = np.isnan(data)
-        data[nan_idxs] = np.max(data)
-        data_cummin = np.minimum.accumulate(data)
+        data[nan_idxs] = np.nanmax(data)
+        data_cummin = np.minimum.accumulate(data).astype(float)
         data_cummin[nan_idxs] = np.nan
         return data_cummin
 
 
 def cumproduct(data, ignore_nodata=True):
     if is_empty(data):
-        return None
+        return np.nan
 
     if not ignore_nodata:
         return np.cumprod(data)
     else:
-        return np.nancumprod(data)
+        data = np.array(data)
+        nan_idxs = np.isnan(data)
+        data_cumprod = np.nancumprod(data).astype(float)
+        data_cumprod[nan_idxs] = np.nan
+        return data_cumprod
 
 
 def cumsum(data, ignore_nodata=True):
     if is_empty(data):
-        return None
+        return np.nan
 
     if not ignore_nodata:
         return np.cumsum(data)
     else:
-        return np.nancumsum(data)
+        data = np.array(data)
+        nan_idxs = np.isnan(data)
+        data_cumsum = np.nancumsum(data).astype(float)
+        data_cumsum[nan_idxs] = np.nan
+        return data_cumsum
 
 
 def eq(x, y, delta=None, case_sensitive=True):
     if not is_valid(x) or not is_valid(y):
-        return None
+        return np.nan
     if (type(x) in [float, int]) and (type(y) in [float, int]):
         if type(delta) in [float, int]:
             return np.isclose(x, y, atol=delta)
         else:
             return x == y
     elif (type(x) == str) and (type(y) == str):
-        if case_sensitive:
-            return x == y
+        x_time = str2time(x)
+        y_time = str2time(y)
+        if x_time is None or y_time is None:
+            if case_sensitive:
+                return x == y
+            else:
+                return x.lower() == y.lower()
         else:
-            return x.lower() == y.lower()
+            return x_time == y_time
+    else:
+        return False
+
 
 def neq(x, y, delta=None, case_sensitive=True):
-    return ~eq(x, y, delta=delta, case_sensitive=case_sensitive)
+    eq_res = eq(x, y, delta=delta, case_sensitive=case_sensitive)
+    if np.isnan(eq_res):
+        return np.nan
+    else:
+        return not eq_res
+
 
 def gt(x, y):
     if not is_valid(x) or not is_valid(y):
-        return None
-    return x > y
+        return np.nan
+    elif (type(x) == str) and (type(y) == str):
+        x_time = str2time(x)
+        y_time = str2time(y)
+        if x_time is None or y_time is None:
+            return False
+        else:
+            return x_time > y_time
+    else:
+        return x > y
+
 
 def gte(x, y):
     if not is_valid(x) or not is_valid(y):
-        return None
-    return x >= y
+        return np.nan
+    elif (type(x) == str) and (type(y) == str):
+        x_time = str2time(x)
+        y_time = str2time(y)
+        if x_time is None or y_time is None:
+            return False
+        else:
+            return x_time >= y_time
+    else:
+        return x >= y
+
 
 def lt(x, y):
     if not is_valid(x) or not is_valid(y):
-        return None
-    return x < y
+        return np.nan
+    elif (type(x) == str) and (type(y) == str):
+        x_time = str2time(x)
+        y_time = str2time(y)
+        if x_time is None or y_time is None:
+            return False
+        else:
+            return x_time < y_time
+    else:
+        return x < y
+
 
 def lte(x, y):
     if not is_valid(x) or not is_valid(y):
-        return None
-    return x <= y
+        return np.nan
+    elif (type(x) == str) and (type(y) == str):
+        x_time = str2time(x)
+        y_time = str2time(y)
+        if x_time is None or y_time is None:
+            return False
+        else:
+            return x_time <= y_time
+    else:
+        return x <= y
 
 
 def between(x, min, max):
+    if not is_valid(x) or not is_valid(min) or not is_valid(max):
+        return np.nan
+
+    if type(min) == str:
+        min = str2time(min)
+    if type(max) == str:
+        max = str2time(max)
+    if type(x) == str:
+        x = str2time(x)
+
     if lt(max, min):
         return False
 
     return gte(x, min) & lte(x, max)
 
 
-def linear_scale_range(x, input_min, input_max, output_min, output_max):
+def linear_scale_range(x, input_min, input_max, output_min=0, output_max=1):
     return ((x - input_min) / (input_max - input_min)) * (output_max - output_min) + output_min
+
 
 def apply_factor(in_array, factor=1):
     """
