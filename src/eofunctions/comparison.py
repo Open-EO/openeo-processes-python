@@ -43,5 +43,9 @@ def comparison(in_array, filter_type, limits):
         out_array = (in_array >= limits[0]) & (in_array <= limits[1])
     return out_array
 
-def _if(expression, accept, reject):
-    return accept if expression else reject
+
+def if_(expression, accept=True, reject=False):
+    if np.isnan(expression):
+        return np.nan
+    else:
+        return accept if expression else reject

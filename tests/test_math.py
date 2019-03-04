@@ -1,12 +1,11 @@
+import sys
+import os
+sys.path.append(os.path.dirname(__file__))
 import eofunctions as eof
 import numpy as np
-
+from utils_test import assert_list_items
 
 # TODO: test exceptions
-def assert_list_items(list_1, list_2):
-    check_list = [True if np.isnan(list_1[i]) and np.isnan(list_2[i]) else list_1[i] == list_2[i]
-                  for i in range(len(list_1))]
-    assert np.all(check_list)
 
 
 def test_e():
@@ -185,7 +184,7 @@ def test_cos():
 
 
 def test_arccos():
-    assert eof.arccos(x=0) == eof.pi()/2
+    assert eof.arccos(x=1) == 0
 
 
 def test_cosh():
@@ -193,7 +192,7 @@ def test_cosh():
 
 
 def test_arcosh():
-    assert np.isnan(eof.arcosh(x=0))
+    assert eof.arcosh(x=1) == 0
 
 
 def test_sin():
@@ -272,7 +271,7 @@ def test_eq():
     assert eof.eq(x="Test", y="test", case_sensitive=False) == True
     assert eof.eq(x="Ä", y="ä", case_sensitive=False) == True
     assert eof.eq(x="00:00:00+00:00", y="00:00:00Z") == True
-    assert eof.eq(x="2018-01-01T12:00:00Z", y="2018-01-01T12:00:00") == True
+    assert eof.eq(x="2018-01-01T12:00:00Z", y="2018-01-01T12:00:00") == False
     assert eof.eq(x="2018-01-01T00:00:00Z", y="2018-01-01T01:00:00+01:00") == True
 
 
@@ -287,7 +286,7 @@ def test_neq():
     assert eof.neq(x="Test", y="test", case_sensitive=False) == False
     assert eof.neq(x="Ä", y="ä", case_sensitive=False) == False
     assert eof.neq(x="00:00:00+00:00", y="00:00:00Z") == False
-    assert eof.neq(x="2018-01-01T12:00:00Z", y="2018-01-01T12:00:00") == False
+    assert eof.neq(x="2018-01-01T12:00:00Z", y="2018-01-01T12:00:00") == True
     assert eof.neq(x="2018-01-01T00:00:00Z", y="2018-01-01T01:00:00+01:00") == False
 
 
@@ -335,10 +334,10 @@ def test_between():
     assert np.isnan(eof.between(x=np.nan, min=0, max=1))
     assert eof.between(x=0.5, min=1, max=0) == False
     assert eof.between(x=-0.5, min=0, max=-1) == False
-    assert eof.between(x="00:00:01-01:00", min="00:00:00Z", max="02:00:02+01:00") == True
+    assert eof.between(x="00:59:59Z", min="01:00:00+01:00", max="01:00:00Z") == True
     assert eof.between(x="2018-07-23T17:22:45Z", min="2018-01-01T00:00:00Z", max="2018-12-31T23:59:59Z") == True
     assert eof.between(x="2000-01-01", min="2018-01-01", max="2020-01-01") == False
-    assert eof.between(x="2018-12-31T17:22:45Z", min="2018-01-01", max="2018-12-31") == False
+    assert eof.between(x="2018-12-31T17:22:45Z", min="2018-01-01", max="2018-12-31", exclude_max=True) == False
 
 
 def test_linear_scale_range():

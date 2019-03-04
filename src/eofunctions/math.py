@@ -1,6 +1,7 @@
 import sys
 import numpy as np
 from eofunctions.texts import str2time
+from datetime import timedelta
 
 def e():
     return np.e
@@ -320,7 +321,12 @@ def gt(x, y):
         if x_time is None or y_time is None:
             return False
         else:
-            return x_time > y_time
+            if type(x_time) == tuple and type(y_time) == tuple:
+                return x_time[0] > y_time[0]
+            elif (type(x_time) == tuple and type(y_time) != tuple) or (type(y_time) == tuple and type(x_time) != tuple):
+                return False
+            else:
+                return x_time > y_time
     else:
         return x > y
 
@@ -334,7 +340,12 @@ def gte(x, y):
         if x_time is None or y_time is None:
             return False
         else:
-            return x_time >= y_time
+            if type(x_time) == tuple and type(y_time) == tuple:
+                return x_time[0] >= y_time[0]
+            elif (type(x_time) == tuple and type(y_time) != tuple) or (type(y_time) == tuple and type(x_time) != tuple):
+                return False
+            else:
+                return x_time >= y_time
     else:
         return x >= y
 
@@ -348,7 +359,12 @@ def lt(x, y):
         if x_time is None or y_time is None:
             return False
         else:
-            return x_time < y_time
+            if type(x_time) == tuple and type(y_time) == tuple:
+                return x_time[0] < y_time[0]
+            elif (type(x_time) == tuple and type(y_time) != tuple) or (type(y_time) == tuple and type(x_time) != tuple):
+                return False
+            else:
+                return x_time < y_time
     else:
         return x < y
 
@@ -362,12 +378,17 @@ def lte(x, y):
         if x_time is None or y_time is None:
             return False
         else:
-            return x_time <= y_time
+            if type(x_time) == tuple and type(y_time) == tuple:
+                return x_time[0] <= y_time[0]
+            elif (type(x_time) == tuple and type(y_time) != tuple) or (type(y_time) == tuple and type(x_time) != tuple):
+                return False
+            else:
+                return x_time <= y_time
     else:
         return x <= y
 
 
-def between(x, min, max):
+def between(x, min, max, exclude_max=False):
     if not is_valid(x) or not is_valid(min) or not is_valid(max):
         return np.nan
 
@@ -378,10 +399,28 @@ def between(x, min, max):
     if type(x) == str:
         x = str2time(x)
 
+    min = np.min(np.array(min))
+    if exclude_max:
+        max = np.min(np.array(max))
+    else:
+        max = np.max(np.array(max))
+
     if lt(max, min):
         return False
 
-    return gte(x, min) & lte(x, max)
+    if not hasattr(x, '__iter__'):
+        x = list([x])
+    else:
+        x = list(x)
+
+    is_between = True
+    for elem in x:  # both boundaries of x have to be inside [min;max]
+        if exclude_max:
+            is_between &= gte(elem, min) & lt(elem, max)
+        else:
+            is_between &= gte(elem, min) & lte(elem, max)
+
+    return is_between
 
 
 def linear_scale_range(x, input_min, input_max, output_min=0, output_max=1):

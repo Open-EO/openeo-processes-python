@@ -1,5 +1,6 @@
 from dateutil.parser import parse as parse_dt
-from datetime import timezone, timedelta
+from datetime import timezone, timedelta, datetime, time
+import re
 
 
 def text_begins(data, pattern, case_sensitive=True):
@@ -28,38 +29,58 @@ def text_merge(data, separator=''):
     separator = str(separator)
     return separator.join(data)
 
-
-def str2time(string):
-    date_time = None
-    try:
-        date_time = parse_dt(string)
-        if date_time.tzinfo is None:
-            date_time = date_time.replace(tzinfo=timezone.utc)
-    except:
-        pass
-
-    return date_time
-
 # old function, not used anymore
 # def str2time(string):
-#     # handle timezone formatting
-#     if "+" in string:
-#         string_parts = string.split('+')
-#         string_parts[-1] = string_parts[-1].replace(':', '')
-#         string = "+".join(string_parts)
-#
-#     if "-" in string:
-#         string_parts = string.split('-')
-#         string_parts[-1] = string_parts[-1].replace(':', '')
-#         string = "-".join(string_parts)
-#
-#     used_time_formats = ["%Y%m%d%H%i%s", "%Y%m%d", "%Y-%m-%d %H:%M:%S", "%Y-%m-%d %H%M%S", "%Y-%m-%d %H:%M:%S %z",
-#                          "%Y-%m-%d %H:%M:%S%z", "%H:%M:%S %z", "%H:%M:%S%z"]
+#     rfc3339_pattern = "^([0-9]+)-(0[1-9]|1[012])-(0[1-9]|[12][0-9]|3[01])[Tt]([01][0-9]|2[0-3]):([0-5][0-9]):([0-5][0-9]|60)(\.[0-9]+)?(([Zz])|([\+|\-]([01][0-9]|2[0-3]):[0-5][0-9]))$"
+#     rfc3339_regex = re.compile(rfc3339_pattern)
 #     date_time = None
-#     for used_time_format in used_time_formats:
-#         try:
-#             date_time = datetime.strptime(string, used_time_format)
-#         except:
-#             continue
-#
-#     return date_time
+#     if re.match(rfc3339_regex, string):
+#         date_time = parse_dt(string)
+#         if date_time.tzinfo is None:
+#             date_time = date_time.replace(tzinfo=timezone.utc)
+#         rfc3339_date_pattern = "^([0-9]+)-(0[1-9]|1[012])-(0[1-9]|[12][0-9]|3[01])$"
+#         rfc3339_date_regex = re.compile(rfc3339_date_pattern)
+#         if re.match(rfc3339_date_regex, string):
+#             date_time_max = date_time + timedelta(hours=24) - timedelta(seconds=1)
+#             date_time = (date_time, date_time_max)
+
+#    return date_time
+
+
+def str2time(string):
+    # handle timezone formatting
+    if "+" in string:
+        string_parts = string.split('+')
+        string_parts[-1] = string_parts[-1].replace(':', '')
+        string = "+".join(string_parts)
+
+    if "t" in string.lower():  # special handling due to - sign in date string
+        if "-" in string[10:]:
+            string_parts = string[10:].split('-')
+            string_parts[-1] = string_parts[-1].replace(':', '')
+            string = string[:10] + "-".join(string_parts)
+    else:
+        if "-" in string:
+            string_parts = string.split('-')
+            string_parts[-1] = string_parts[-1].replace(':', '')
+            string = "-".join(string_parts)
+
+    rfc3339_time_formats = ["%Y-%m-%d", "%Y-%m-%dT%H:%M:%SZ", "%Y-%m-%dT%H:%M:%Sz", "%Y-%m-%dt%H:%M:%SZ",
+                            "%Y-%m-%dt%H:%M:%Sz", "%Y-%m-%dT%H:%M:%S%z", "%Y-%m-%dt%H:%M:%S%z",
+                            "%H:%M:%SZ", "%H:%M:%S%z"]
+    date_time = None
+    for i, used_time_format in enumerate(rfc3339_time_formats):
+        try:
+            date_time = datetime.strptime(string, used_time_format)
+            if date_time.tzinfo is None:
+                date_time = date_time.replace(tzinfo=timezone.utc)
+            if i == 0:
+                date_time_max = datetime.combine(date_time.date(), time()) + timedelta(hours=24) \
+                                - timedelta(seconds=1)
+                date_time = (datetime.combine(date_time.date(), time()).replace(tzinfo=timezone.utc),
+                             date_time_max.replace(tzinfo=timezone.utc))
+            break
+        except:
+            continue
+
+    return date_time
