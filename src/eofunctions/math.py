@@ -75,14 +75,14 @@ def max_(data, ignore_nodata=True):
         return np.nanmax(data)
 
 
-def mean(data, ignore_nodata=True):
+def mean(data, axis=0, ignore_nodata=True):
     if is_empty(data):
         return np.nan
 
     if not ignore_nodata:
-        return np.mean(data)
+        return np.mean(data, axis=axis)
     else:
-        return np.nanmean(data)
+        return np.nanmean(data, axis=axis)
 
 
 def median(data, ignore_nodata=True):
@@ -439,3 +439,10 @@ def apply_factor(in_array, factor=1):
     out_array = in_array * factor
 
     return out_array
+
+
+def eval_(x, expression=None):
+    if expression is not None:
+        return eval(expression)
+    else:
+        return None
