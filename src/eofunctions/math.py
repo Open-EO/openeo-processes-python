@@ -3,6 +3,11 @@ import numpy as np
 from eofunctions.texts import str2time
 from datetime import timedelta
 
+
+# TODO: test if operations are faster using lists or numpy arrays
+# TODO: discuss when one should convert None values to np.nan
+# TODO: quantiles with nans are not working properly/really slow -> own implementation (e.g. like in SGRT)?
+
 def e():
     return np.e
 
@@ -12,6 +17,9 @@ def pi():
 
 
 def is_nan(x):
+    if isinstance(x, list):
+        x = np.array(x)
+
     if isinstance(x, (int, float, np.ndarray)):
         return np.isnan(x)
     else:
@@ -19,17 +27,29 @@ def is_nan(x):
 
 
 def is_nodata(x):
-    if x in [np.nan, None]:
-        return True
+    if isinstance(x, list):
+        x = np.array(x)
+
+    if isinstance(x, np.ndarray):
+        return np.isnan(x)
     else:
-        return False
+        if x in [np.nan, None]:
+            return True
+        else:
+            return False
 
 
 def is_valid(x):
-    if x not in [np.nan, np.inf, None]:
-        return True
+    if isinstance(x, list):
+        x = np.array(x)
+
+    if isinstance(x, np.ndarray):
+        return ~np.isnan(x) & ~np.isinf(x)
     else:
-        return False
+        if x not in [np.nan, np.inf, None]:
+            return True
+        else:
+            return False
 
 
 def is_empty(data):
@@ -40,7 +60,13 @@ def is_empty(data):
 
 
 def int_(x):
-    return np.int(x)
+    if isinstance(x, list):
+        x = np.array(x)
+
+    if isinstance(x, np.ndarray):
+        return x.astype(int)
+    else:
+        return int(x)
 
 
 def floor(x):
@@ -52,27 +78,33 @@ def ceil(x):
 
 
 def round_(x, p=0):
-    return round(x, p)
+    if isinstance(x, list):
+        x = np.array(x)
+
+    if isinstance(x, np.ndarray):
+        return np.around(x, p)
+    else:
+        return round(x, p)
 
 
-def min_(data, ignore_nodata=True):
+def min_(data, axis=0, ignore_nodata=True):
     if is_empty(data):
         return np.nan
 
     if not ignore_nodata:
-        return np.min(data)
+        return np.min(data, axis=axis)
     else:
-        return np.nanmin(data)
+        return np.nanmin(data, axis=axis)
 
 
-def max_(data, ignore_nodata=True):
+def max_(data, axis=0, ignore_nodata=True):
     if is_empty(data):
         return np.nan
 
     if not ignore_nodata:
-        return np.max(data)
+        return np.max(data, axis=axis)
     else:
-        return np.nanmax(data)
+        return np.nanmax(data, axis=axis)
 
 
 def mean(data, axis=0, ignore_nodata=True):
@@ -85,31 +117,37 @@ def mean(data, axis=0, ignore_nodata=True):
         return np.nanmean(data, axis=axis)
 
 
-def median(data, ignore_nodata=True):
-    return quantiles(data, probabilities=[0.5], ignore_nodata=ignore_nodata)[0]
+def median(data, axis=0, ignore_nodata=True):
+    return np.squeeze(quantiles(data, axis=axis, probabilities=[0.5], ignore_nodata=ignore_nodata), axis=0)
 
 
-def sd(data, ignore_nodata=True):
+def sd(data, axis=0, ignore_nodata=True):
     if is_empty(data):
         return np.nan
 
     if not ignore_nodata:
-        return np.std(data, ddof=1)
+        return np.std(data, axis=axis, ddof=1)
     else:
-        return np.nanstd(data, ddof=1)
+        return np.nanstd(data, axis=axis, ddof=1)
 
 
-def variance(data, ignore_nodata=True):
+def variance(data, axis=0, ignore_nodata=True):
     if is_empty(data):
         return np.nan
 
     if not ignore_nodata:
-        return np.var(data, ddof=1)
+        return np.var(data, axis=axis, ddof=1)
     else:
-        return np.nanvar(data, ddof=1)
+        return np.nanvar(data, axis=axis, ddof=1)
 
 
-def quantiles(data, probabilities=None, q=None, ignore_nodata=True):
+def quantiles(data, axis=0, probabilities=None, q=None, ignore_nodata=True):
+    if is_empty(data):
+        return np.nan
+
+    if isinstance(data, list):
+        data = np.array(data)
+
     if (probabilities is not None) and (q is not None):
         err_message = "The process 'quantiles' only allows that either the 'probabilities' or the 'q' parameter is set."
         sys.exit(err_message)
@@ -118,17 +156,17 @@ def quantiles(data, probabilities=None, q=None, ignore_nodata=True):
         if is_empty(data):
             return [np.nan] * len(probabilities)
         if not ignore_nodata:
-            return np.percentile(data, (np.array(probabilities)*100.).tolist()).tolist()
+            return np.percentile(data, list(np.array(probabilities)*100.), axis=axis)
         else:
-            return np.nanpercentile(data, (np.array(probabilities)*100.).tolist()).tolist()
+            return np.nanpercentile(data, list(np.array(probabilities)*100.), axis=axis)
     elif q is not None:
         probabilities = list(np.arange(0, 100, 100./q))[1:]
         if is_empty(data):
             return [np.nan] * len(probabilities)
         if not ignore_nodata:
-            return np.percentile(data, probabilities).tolist()
+            return np.percentile(data, probabilities, axis=axis)
         else:
-            return np.nanpercentile(data, probabilities).tolist()
+            return np.nanpercentile(data, probabilities, axis=axis)
     else:
         err_message = "The process 'quantiles' requires either the 'probabilities' or 'q' parameter to be set."
         sys.exit(err_message)
@@ -146,7 +184,7 @@ def absolute(x):
 
 
 def power(base, p):
-    if not is_valid(base) or not is_valid(p):
+    if not np.all(is_valid(base)) or not is_valid(p):
         return np.nan
     else:
         return np.power(base, float(p))
