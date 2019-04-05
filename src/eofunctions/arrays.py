@@ -302,8 +302,8 @@ def multiply(data, axis=0, ignore_nodata=True):
         return np.apply_along_axis(lambda data: functools.reduce(operator.mul, data, 1), axis, data)
 
 
-def product(data, ignore_nodata=True):
-    return multiply(data, ignore_nodata=ignore_nodata)
+def product(data, axis=0, ignore_nodata=True):
+    return multiply(data, axis=axis, ignore_nodata=ignore_nodata)
 
 
 # old function, not needed anymore

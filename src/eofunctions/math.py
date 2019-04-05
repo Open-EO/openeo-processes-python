@@ -1,7 +1,5 @@
 import sys
 import numpy as np
-from eofunctions.texts import str2time
-from datetime import timedelta
 import pandas as pd
 
 
@@ -24,6 +22,10 @@ def e():
 
 def pi():
     return np.pi
+
+
+def not_(x):
+    return not x
 
 
 def is_nan(x):
@@ -328,147 +330,6 @@ def cumsum(data, axis=0, ignore_nodata=True):
         data_cumsum = np.nancumsum(data, axis=axis).astype(float)
         data_cumsum[nan_idxs] = np.nan
         return data_cumsum
-
-
-def eq(x, y, delta=None, case_sensitive=True):
-    if not is_valid(x) or not is_valid(y):
-        return np.nan
-    if (type(x) in [float, int]) and (type(y) in [float, int]):
-        if type(delta) in [float, int]:
-            return np.isclose(x, y, atol=delta)
-        else:
-            return x == y
-    elif (type(x) == str) and (type(y) == str):
-        x_time = str2time(x)
-        y_time = str2time(y)
-        if x_time is None or y_time is None:
-            if case_sensitive:
-                return x == y
-            else:
-                return x.lower() == y.lower()
-        else:
-            return x_time == y_time
-    else:
-        return False
-
-
-def neq(x, y, delta=None, case_sensitive=True):
-    eq_res = eq(x, y, delta=delta, case_sensitive=case_sensitive)
-    if np.isnan(eq_res):
-        return np.nan
-    else:
-        return not eq_res
-
-
-def gt(x, y):
-    if not is_valid(x) or not is_valid(y):
-        return np.nan
-    elif (type(x) == str) and (type(y) == str):
-        x_time = str2time(x)
-        y_time = str2time(y)
-        if x_time is None or y_time is None:
-            return False
-        else:
-            if type(x_time) == tuple and type(y_time) == tuple:
-                return x_time[0] > y_time[0]
-            elif (type(x_time) == tuple and type(y_time) != tuple) or (type(y_time) == tuple and type(x_time) != tuple):
-                return False
-            else:
-                return x_time > y_time
-    else:
-        return x > y
-
-
-def gte(x, y):
-    if not is_valid(x) or not is_valid(y):
-        return np.nan
-    elif (type(x) == str) and (type(y) == str):
-        x_time = str2time(x)
-        y_time = str2time(y)
-        if x_time is None or y_time is None:
-            return False
-        else:
-            if type(x_time) == tuple and type(y_time) == tuple:
-                return x_time[0] >= y_time[0]
-            elif (type(x_time) == tuple and type(y_time) != tuple) or (type(y_time) == tuple and type(x_time) != tuple):
-                return False
-            else:
-                return x_time >= y_time
-    else:
-        return x >= y
-
-
-def lt(x, y):
-    if not is_valid(x) or not is_valid(y):
-        return np.nan
-    elif (type(x) == str) and (type(y) == str):
-        x_time = str2time(x)
-        y_time = str2time(y)
-        if x_time is None or y_time is None:
-            return False
-        else:
-            if type(x_time) == tuple and type(y_time) == tuple:
-                return x_time[0] < y_time[0]
-            elif (type(x_time) == tuple and type(y_time) != tuple) or (type(y_time) == tuple and type(x_time) != tuple):
-                return False
-            else:
-                return x_time < y_time
-    else:
-        return x < y
-
-
-def lte(x, y):
-    if not is_valid(x) or not is_valid(y):
-        return np.nan
-    elif (type(x) == str) and (type(y) == str):
-        x_time = str2time(x)
-        y_time = str2time(y)
-        if x_time is None or y_time is None:
-            return False
-        else:
-            if type(x_time) == tuple and type(y_time) == tuple:
-                return x_time[0] <= y_time[0]
-            elif (type(x_time) == tuple and type(y_time) != tuple) or (type(y_time) == tuple and type(x_time) != tuple):
-                return False
-            else:
-                return x_time <= y_time
-    else:
-        return x <= y
-
-
-def between(x, min, max, exclude_max=False):
-    if not is_valid(x) or not is_valid(min) or not is_valid(max):
-        return np.nan
-
-    if type(min) == str:
-        min = str2time(min)
-    if type(max) == str:
-        max = str2time(max)
-    if type(x) == str:
-        x = str2time(x)
-
-    min = np.min(np.array(min))
-    if exclude_max:
-        max = np.min(np.array(max))
-    else:
-        max = np.max(np.array(max))
-
-    if lt(max, min):
-        return False
-
-    if not hasattr(x, '__iter__'):
-        x = list([x])
-    else:
-        x = list(x)
-
-    is_between = True
-    for elem in x:  # both boundaries of x have to be inside [min;max]
-        if exclude_max:
-            is_between &= gte(elem, min) & lt(elem, max)
-        else:
-            is_between &= gte(elem, min) & lte(elem, max)
-
-    return is_between
 
 
 def linear_scale_range(x, input_min, input_max, output_min=0, output_max=1):
