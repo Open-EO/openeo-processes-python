@@ -2,11 +2,21 @@ import sys
 import numpy as np
 from eofunctions.texts import str2time
 from datetime import timedelta
+import pandas as pd
 
 
 # TODO: test if operations are faster using lists or numpy arrays
 # TODO: discuss when one should convert None values to np.nan
 # TODO: quantiles with nans are not working properly/really slow -> own implementation (e.g. like in SGRT)?
+def list2nparray(x):
+    x_tmp = np.array(x)
+    if x_tmp.dtype.kind in ['U', 'S']:
+        x = np.array(x, dtype=object)
+    else:
+        x = x_tmp
+
+    return x
+
 
 def e():
     return np.e
@@ -18,20 +28,20 @@ def pi():
 
 def is_nan(x):
     if isinstance(x, list):
-        x = np.array(x)
+        x = list2nparray(x)
 
     if isinstance(x, (int, float, np.ndarray)):
-        return np.isnan(x)
+        return pd.isnull(x)
     else:
         return True
 
 
 def is_nodata(x):
     if isinstance(x, list):
-        x = np.array(x)
+        x = list2nparray(x)
 
     if isinstance(x, np.ndarray):
-        return np.isnan(x)
+        return pd.isnull(x)
     else:
         if x in [np.nan, None]:
             return True
@@ -41,10 +51,10 @@ def is_nodata(x):
 
 def is_valid(x):
     if isinstance(x, list):
-        x = np.array(x)
+        x = list2nparray(x)
 
     if isinstance(x, np.ndarray):
-        return ~np.isnan(x) & ~np.isinf(x)
+        return ~pd.isnull(x) & (x != np.inf)
     else:
         if x not in [np.nan, np.inf, None]:
             return True
@@ -61,7 +71,7 @@ def is_empty(data):
 
 def int_(x):
     if isinstance(x, list):
-        x = np.array(x)
+        x = list2nparray(x)
 
     if isinstance(x, np.ndarray):
         return x.astype(int)
@@ -79,7 +89,7 @@ def ceil(x):
 
 def round_(x, p=0):
     if isinstance(x, list):
-        x = np.array(x)
+        x = list2nparray(x)
 
     if isinstance(x, np.ndarray):
         return np.around(x, p)
@@ -146,7 +156,7 @@ def quantiles(data, axis=0, probabilities=None, q=None, ignore_nodata=True):
         return np.nan
 
     if isinstance(data, list):
-        data = np.array(data)
+        data = list2nparray(data)
 
     if (probabilities is not None) and (q is not None):
         err_message = "The process 'quantiles' only allows that either the 'probabilities' or the 'q' parameter is set."
@@ -262,60 +272,60 @@ def arctan2(y, x):
     return np.arctan2(y, x)
 
 
-def cummax(data, ignore_nodata=True):
+def cummax(data, axis=0, ignore_nodata=True):
     if is_empty(data):
         return np.nan
 
     if not ignore_nodata:
-        return np.maximum.accumulate(data)
+        return np.maximum.accumulate(data, axis=axis)
     else:
         data = np.array(data)
         nan_idxs = np.isnan(data)
         data[nan_idxs] = np.nanmin(data)
-        data_cummax = np.maximum.accumulate(data).astype(float)
+        data_cummax = np.maximum.accumulate(data, axis=axis).astype(float)
         data_cummax[nan_idxs] = np.nan
         return data_cummax
 
 
-def cummin(data, ignore_nodata=True):
+def cummin(data, axis=0, ignore_nodata=True):
     if is_empty(data):
         return np.nan
 
     if not ignore_nodata:
-        return np.minimum.accumulate(data)
+        return np.minimum.accumulate(data, axis=axis)
     else:
         data = np.array(data)
         nan_idxs = np.isnan(data)
         data[nan_idxs] = np.nanmax(data)
-        data_cummin = np.minimum.accumulate(data).astype(float)
+        data_cummin = np.minimum.accumulate(data, axis=axis).astype(float)
         data_cummin[nan_idxs] = np.nan
         return data_cummin
 
 
-def cumproduct(data, ignore_nodata=True):
+def cumproduct(data, axis=0, ignore_nodata=True):
     if is_empty(data):
         return np.nan
 
     if not ignore_nodata:
-        return np.cumprod(data)
+        return np.cumprod(data, axis=axis)
     else:
         data = np.array(data)
         nan_idxs = np.isnan(data)
-        data_cumprod = np.nancumprod(data).astype(float)
+        data_cumprod = np.nancumprod(data, axis=axis).astype(float)
         data_cumprod[nan_idxs] = np.nan
         return data_cumprod
 
 
-def cumsum(data, ignore_nodata=True):
+def cumsum(data, axis=0, ignore_nodata=True):
     if is_empty(data):
         return np.nan
 
     if not ignore_nodata:
-        return np.cumsum(data)
+        return np.cumsum(data, axis=axis)
     else:
         data = np.array(data)
         nan_idxs = np.isnan(data)
-        data_cumsum = np.nancumsum(data).astype(float)
+        data_cumsum = np.nancumsum(data, axis=axis).astype(float)
         data_cumsum[nan_idxs] = np.nan
         return data_cumsum
 
@@ -462,6 +472,9 @@ def between(x, min, max, exclude_max=False):
 
 
 def linear_scale_range(x, input_min, input_max, output_min=0, output_max=1):
+    if isinstance(x, list):
+        x = list2nparray(x)
+
     return ((x - input_min) / (input_max - input_min)) * (output_max - output_min) + output_min
 
 

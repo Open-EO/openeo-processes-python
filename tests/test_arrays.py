@@ -144,5 +144,3 @@ def test_extrema():
     assert_list_items(eof.extrema(data=[5, 2.5, np.nan, -0.7]), [-0.7, 5])
     assert_list_items(eof.extrema(data=[1, 0, 3, np.nan, 2], ignore_nodata=False), [np.nan, np.nan])
     assert_list_items(eof.extrema(data=[]), [np.nan, np.nan])
-
-test_subtract()

@@ -5,20 +5,37 @@ import warnings
 import functools
 import operator
 import copy
-from eofunctions.math import min_, max_, is_empty, is_valid
+from eofunctions.math import min_, max_, is_empty, is_valid, list2nparray
 
 
-# TODO: Flattening is applied in some function calls, is this necessary?
-# TODO: Where should the data types be checked? In each function?
-def flatten(data, dtype=object):
-    if not isinstance(data, np.ndarray):
-        data = np.array(data, dtype=dtype)
-    if data.ndim > 1:
-        warn_message = "Array has more than one dimension. Flattening will be applied."
-        warnings.warn(warn_message)
-        data = data.flatten()
+# TODO: documentation missing!
+# TODO: restructure function packages, they currently interfere with each other
 
-    return data
+# def flatten(data, dtype=object):
+#     if not isinstance(data, np.ndarray):
+#         data = np.array(data, dtype=dtype)
+#     if data.ndim > 1:
+#         warn_message = "Array has more than one dimension. Flattening will be applied."
+#         warnings.warn(warn_message)
+#         data = data.flatten()
+#
+#     return data
+def __build_multi_dim_index(index_name, shape, axis):
+    dims = len(shape)
+    expand_dim_exprs = [["None"] * (dims - 1)] * (dims - 1)
+    for i, elem in enumerate(expand_dim_exprs):
+        elem_cp = copy.deepcopy(elem)
+        elem_cp[i] = ":"
+        expand_dim_exprs[i] = ",".join(elem_cp)
+    expand_dim_exprs.insert(axis, None)
+    strings_select = []
+    for i, n in enumerate(shape):
+        if i == axis:
+            strings_select.append(index_name)
+        else:
+            strings_select.append("np.arange({})[{}]".format(n, expand_dim_exprs[i]))
+
+    return ",".join(strings_select)
 
 
 def array_contains(data, element):
@@ -26,8 +43,6 @@ def array_contains(data, element):
 
 
 def array_element(data, index, return_nodata=False):
-
-    data = flatten(data)
     element = np.nan
     if index >= len(data):
         if not return_nodata:
@@ -42,81 +57,121 @@ def array_element(data, index, return_nodata=False):
 # TODO: This function does not work fully yet as specified in
 # https://open-eo.github.io/openeo-api/v/0.4.0/processreference/#count
 # link to a function understanding a process graph is needed
-def count(data, expression=None):
-    if expression:  # expression True or not None
-        if type(expression) == bool:
-            num_of_elems = functools.reduce(operator.mul, np.array(data).shape, 1)
+def count(data, axis=0, expression=None):
+    if isinstance(data, list):
+        data = list2nparray(data)
+
+    if expression == True:
+        if axis is not None:
+            num_of_elems = data.shape[axis]
+        else:
+            num_of_elems = functools.reduce(operator.mul, data.shape, 1)
+    elif isinstance(expression, str):
+        if axis is not None:
+            num_of_elems = np.sum(eval(expression.replace('x', 'data')), axis=axis)
         else:
             num_of_elems = np.sum(eval(expression.replace('x', 'data')))
-    else:  # expression False or None
-        num_of_elems = np.sum([is_valid(elem) for elem in data])
+    else:
+        if axis is not None:
+            num_of_elems = np.sum(is_valid(data), axis=axis)
+        else:
+            num_of_elems = np.sum(is_valid(data))
 
     return num_of_elems
 
 
-def first(data, ignore_nodata=True):
-    data = flatten(data)
+def first(data, axis=0, ignore_nodata=True):
+    if not isinstance(data, np.ndarray):
+        data = list2nparray(data)
+
     first_elem = np.nan
     if not is_empty(data):
+        dims = len(data.shape)
         if ignore_nodata:
-            first_elem = data[~pd.isnull(data)][0]
+            nan_mask = ~pd.isnull(data)
+            first_elem_idx = np.argmax(nan_mask, axis=axis)
+            string_select = __build_multi_dim_index("first_elem_idx", data.shape, axis)
+            first_elem = eval("data[{}]".format(string_select))
         else:
-            first_elem = data[0]
+            strings_select = [":"]*dims
+            strings_select[axis] = "0"
+            first_elem = eval("data[{}]".format(",".join(strings_select)))
 
     return first_elem
 
 
-def last(data, ignore_nodata=True):
-    data = flatten(data)
+def last(data, axis=0, ignore_nodata=True):
+    if not isinstance(data, np.ndarray):
+        data = list2nparray(data)
+
     last_elem = np.nan
     if not is_empty(data):
+        dims = len(data.shape)
         if ignore_nodata:
-            last_elem = data[~pd.isnull(data)][-1]
+            nan_mask = ~pd.isnull(data)
+            last_elem_idx = np.argmax(np.flip(nan_mask, axis=axis), axis=axis)
+            string_select = __build_multi_dim_index("last_elem_idx", data.shape, axis)
+            last_elem = eval("data[{}]".format(string_select))
         else:
-            last_elem = data[-1]
+            strings_select = [":"] * dims
+            strings_select[axis] = "-1"
+            last_elem = eval("data[{}]".format(",".join(strings_select)))
 
     return last_elem
 
 
-def order(data, asc=True, nodata=None):
-    data = flatten(data, dtype=float)
+def order(data, axis=0, asc=True, nodata=None):
+    if isinstance(data, list):
+        data = list2nparray(data)
+
+    data = data.astype(float)
 
     if asc:
-        permutation_idxs = np.argsort(data, kind='mergesort')
+        permutation_idxs = np.argsort(data, kind='mergesort', axis=axis)
     else:  # [::-1] not possible
-        permutation_idxs = np.argsort(-data, kind='mergesort')
+        permutation_idxs = np.argsort(-data, kind='mergesort', axis=axis)
 
-    data_sorted = data[permutation_idxs]
-    nan_idxs = pd.isnull(data_sorted)
-    if nodata == True:  # boolean comparison necessary, since nodata can not be only of type boolean
-        return permutation_idxs[~nan_idxs].tolist() + permutation_idxs[nan_idxs].tolist()
-    elif nodata == False:
-        return permutation_idxs[nan_idxs].tolist() + permutation_idxs[~nan_idxs].tolist()
+    if nodata == False:  # TODO: can this be done in an easier way?
+        string_select = __build_multi_dim_index("permutation_idxs", data.shape, axis)
+        string_select_flip = __build_multi_dim_index("permutation_idxs_flip", data.shape, axis)
+        data_sorted = eval("data[{}]".format(string_select))
+        nan_idxs = pd.isnull(data_sorted)
+        permutation_idxs_flip = np.flip(permutation_idxs, axis=axis)
+        data_sorted_flip = eval("data[{}]".format(string_select_flip))
+        nan_idxs_flip = pd.isnull(data_sorted_flip)
+        permutation_idxs_flip[~nan_idxs_flip] = permutation_idxs[~nan_idxs]
+        return permutation_idxs_flip
     else:
-        return permutation_idxs[~nan_idxs].tolist()
+        return permutation_idxs
 
 
-def rearrange(data, order):
-    data = flatten(data)
-    return data[order]
+def rearrange(data, order, axis=0):
+    if isinstance(data, list):
+        data = list2nparray(data)
+    string_select = __build_multi_dim_index("order", data.shape, axis)
+    return eval("data[{}]".format(string_select))
 
 
 # rearrange(data, order(data, nodata)) could be used, but is probably slower than sorting the array directly
-def sort(data, asc=True, nodata=None):
-    data = flatten(data, dtype=float)
+def sort(data, axis=0, asc=True, nodata=None):
+    if isinstance(data, list):
+        data = list2nparray(data)
+
+    data = data.astype(float)
 
     if asc:
-        data_sorted = np.sort(data)
+        data_sorted = np.sort(data, axis=axis)
     else:  # [::-1] not possible
-        data_sorted = -np.sort(-data)
+        data_sorted = -np.sort(-data, axis=axis)
 
-    nan_idxs = pd.isnull(data_sorted)
-    if nodata == True:  # boolean comparison necessary, since nodata can not be only of type boolean
-        return data_sorted[~nan_idxs].tolist() + data_sorted[nan_idxs].tolist()
-    elif nodata == False:
-        return data_sorted[nan_idxs].tolist() + data_sorted[~nan_idxs].tolist()
+    if nodata == False:
+        nan_idxs = pd.isnull(data_sorted)
+        data_sorted_flip = np.flip(data_sorted, axis=axis)
+        nan_idxs_flip = pd.isnull(data_sorted_flip)
+        data_sorted_flip[~nan_idxs_flip] = data_sorted[~nan_idxs]
+        return data_sorted_flip
     else:
-        return data_sorted[~nan_idxs].tolist()
+        return data_sorted
 
 
 def and_(expressions, ignore_nodata=True):
@@ -162,11 +217,13 @@ def xor_(expressions, ignore_nodata=True):
 
 
 def clip(data, min, max):
-    data = np.array(data)
+    if isinstance(data, list):
+        data = list2nparray(data)
+
     data = np.where(data < min, min, data)
     data = np.where(data > max, max, data)
 
-    return data.tolist()
+    return data
 
 
 # old function, not needed anymore
@@ -176,14 +233,15 @@ def __sum_first_elem(data):
     return data[0]
 
 
-def sum_(data, ignore_nodata=True):
-    if len(data) < 2:
+def sum_(data, axis=0, ignore_nodata=True):
+    number_elems = count(data, axis=axis, expression=True)
+    if number_elems < 2:
         err_message = "Addition requires at least two numbers."
         sys.exit(err_message)
     if not ignore_nodata:
-        return np.sum(data)
+        return np.sum(data, axis=axis)
     else:
-        return np.nansum(data)
+        return np.nansum(data, axis=axis)
 
 
 # old function, not needed anymore
@@ -193,20 +251,26 @@ def __subtract_first_elem(data):
     return data[0]
 
 
-def subtract(data, ignore_nodata=True):
-    if len(data) < 2:
+# TODO: faster implemention?
+def subtract(data, axis=0, ignore_nodata=True):
+    if isinstance(data, list):
+        data = list2nparray(data)
+
+    number_elems = count(data, axis=axis, expression=True)
+    if number_elems < 2:
         err_message = "Subtraction requires at least two numbers (a minuend and one or more subtrahends)."
         sys.exit(err_message)
-    data = np.array(data)
+
+    nan_idxs = pd.isnull(data)
     if not ignore_nodata:
-        if np.any(np.isnan(data)):
+        if np.any(nan_idxs):
             return np.nan
         else:
-            data = data[~np.isnan(data)]
-            return functools.reduce(operator.sub, data)
+            data = data[~nan_idxs]
+            return np.apply_along_axis(lambda data: functools.reduce(operator.sub, data), axis, data)
     else:
-        data = data[~np.isnan(data)]
-        return functools.reduce(operator.sub, data)
+        data = data[~nan_idxs]
+        return np.apply_along_axis(lambda data: functools.reduce(operator.sub, data), axis, data)
 
 
 # old function, not needed anymore
@@ -216,20 +280,26 @@ def __multiply_first_elem(data):
     return data[0]
 
 
-def multiply(data, ignore_nodata=True):
-    if len(data) < 2:
+# TODO: faster implemention?
+def multiply(data, axis=0, ignore_nodata=True):
+    if isinstance(data, list):
+        data = list2nparray(data)
+
+    number_elems = count(data, axis=axis, expression=True)
+    if number_elems < 2:
         err_message = "Multiplication requires at least two numbers."
         sys.exit(err_message)
-    data = np.array(data)
+
+    nan_idxs = pd.isnull(data)
     if not ignore_nodata:
-        if np.any(np.isnan(data)):
+        if np.any(nan_idxs):
             return np.nan
         else:
-            data = data[~np.isnan(data)]
-            return functools.reduce(operator.mul, data, 1)
+            data = data[~nan_idxs]
+            return np.apply_along_axis(lambda data: functools.reduce(operator.mul, data, 1), axis, data)
     else:
-        data = data[~np.isnan(data)]
-        return functools.reduce(operator.mul, data, 1)
+        data = data[~nan_idxs]
+        return np.apply_along_axis(lambda data: functools.reduce(operator.mul, data, 1), axis, data)
 
 
 def product(data, ignore_nodata=True):
@@ -243,25 +313,31 @@ def __divide_first_elem(data):
     return data[0]
 
 
-def divide(data, ignore_nodata=True):
-    if len(data) < 2:
+# TODO: faster implemention?
+def divide(data, axis=0, ignore_nodata=True):
+    if isinstance(data, list):
+        data = list2nparray(data)
+
+    number_elems = count(data, axis=axis, expression=True)
+    if number_elems < 2:
         err_message = "Division requires at least two numbers (a dividend and one or more divisors)."
         sys.exit(err_message)
-    data = np.array(data)
+
+    nan_idxs = pd.isnull(data)
     if not ignore_nodata:
-        if np.any(np.isnan(data)):
+        if np.any(nan_idxs):
             return np.nan
         else:
-            data = data[~np.isnan(data)]
-            return functools.reduce(operator.truediv, data)
+            data = data[~nan_idxs]
+            return np.apply_along_axis(lambda data: functools.reduce(operator.truediv, data), axis, data)
     else:
-        data = data[~np.isnan(data)]
-        return functools.reduce(operator.truediv, data)
+        data = data[~nan_idxs]
+        return np.apply_along_axis(lambda data: functools.reduce(operator.truediv, data), axis, data)
 
 
-def extrema(data, ignore_nodata=True):
-    min_val = min_(data, ignore_nodata=ignore_nodata)
-    max_val = max_(data, ignore_nodata=ignore_nodata)
+def extrema(data, axis=0, ignore_nodata=True):
+    min_val = min_(data, axis=axis, ignore_nodata=ignore_nodata)
+    max_val = max_(data, axis=axis, ignore_nodata=ignore_nodata)
     return [min_val, max_val]
 
 

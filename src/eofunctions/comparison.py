@@ -7,7 +7,7 @@ https://open-eo.github.io/openeo-api/v/0.4.0/processreference/ - in comparison t
 
 import sys
 import numpy as np
-
+import pandas as pd
 
 def comparison(in_array, filter_type, limits):
     """
@@ -45,7 +45,7 @@ def comparison(in_array, filter_type, limits):
 
 
 def if_(expression, accept=True, reject=False):
-    if np.isnan(expression):
+    if pd.isnull(expression):
         return np.nan
     else:
         return accept if expression else reject
