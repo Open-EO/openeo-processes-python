@@ -49,7 +49,7 @@ def comparison(in_array, filter_type, limits):
 def eq(x, y, delta=None, case_sensitive=True):
     if not is_valid(x) or not is_valid(y):
         return np.nan
-    if (type(x) in [float, int]) and (type(y) in [float, int]):
+    if (type(x) in [float, int, np.ndarray]) and (type(y) in [float, int, np.ndarray]):
         if type(delta) in [float, int]:
             return np.isclose(x, y, atol=delta)
         else:

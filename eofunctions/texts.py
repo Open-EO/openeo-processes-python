@@ -47,7 +47,7 @@ def text_merge(data, separator=''):
 #    return date_time
 
 
-def str2time(string):
+def str2time(string, allow_24=False):
     # handle timezone formatting
     if "+" in string:
         string_parts = string.split('+')
@@ -64,6 +64,14 @@ def str2time(string):
             string_parts = string.split('-')
             string_parts[-1] = string_parts[-1].replace(':', '')
             string = "-".join(string_parts)
+
+    if allow_24:
+        pattern = re.compile("24:\d{2}:\d{2}")
+        pattern_match = re.search(pattern, string)
+        if pattern_match:
+            old_sub_string = pattern_match.group()
+            new_sub_string = "23" + old_sub_string[2:]
+            string = string.replace(old_sub_string, new_sub_string)
 
     rfc3339_time_formats = ["%Y-%m-%d", "%Y-%m-%dT%H:%M:%SZ", "%Y-%m-%dT%H:%M:%Sz", "%Y-%m-%dt%H:%M:%SZ",
                             "%Y-%m-%dt%H:%M:%Sz", "%Y-%m-%dT%H:%M:%S%z", "%Y-%m-%dt%H:%M:%S%z",
@@ -82,5 +90,8 @@ def str2time(string):
             break
         except:
             continue
+
+    if date_time and allow_24:
+        date_time += timedelta(hours=1)
 
     return date_time
