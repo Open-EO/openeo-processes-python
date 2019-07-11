@@ -9,7 +9,7 @@ import sys
 import numpy as np
 import pandas as pd
 from eofunctions.math import is_valid
-from eofunctions.texts import str2time
+from utils.time import str2time
 
 
 def comparison(in_array, filter_type, limits):
