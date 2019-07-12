@@ -3,6 +3,15 @@ import numpy as np
 import pandas as pd
 
 
+def process(fun):
+    def fun_wrapper(*args, **kwargs):
+        cls_name = fun()
+        if isinstance(args[0], np.ndarray):
+            cls_fun = getattr(cls_name, "exec_np")
+            return cls_fun(*args, **kwargs)
+
+    return fun_wrapper
+
 # TODO: test if operations are faster using lists or numpy arrays
 # TODO: discuss when one should convert None values to np.nan
 # TODO: quantiles with nans are not working properly/really slow -> own implementation (e.g. like in SGRT)?
@@ -119,14 +128,32 @@ def max_(data, axis=0, ignore_nodata=True):
         return np.nanmax(data, axis=axis)
 
 
-def mean(data, axis=0, ignore_nodata=True):
-    if is_empty(data):
-        return np.nan
+@process
+def eo_mean():
+    return eoMean()
 
-    if not ignore_nodata:
-        return np.mean(data, axis=axis)
-    else:
-        return np.nanmean(data, axis=axis)
+
+class eoMean(object):
+    def __init__(self):
+        pass
+
+    @staticmethod
+    def exec_np(data, ignore_nodata=True, dimension=0):
+        if is_empty(data):
+            return np.nan
+
+        if not ignore_nodata:
+            return np.mean(data, axis=dimension)
+        else:
+            return np.nanmean(data, axis=dimension)
+
+    @staticmethod
+    def exec_xar():
+        pass
+
+    @staticmethod
+    def exec_da(self):
+        pass
 
 
 def median(data, axis=0, ignore_nodata=True):
@@ -358,3 +385,6 @@ def eval_(x, expression=None):
         return eval(expression)
     else:
         return None
+
+if __name__ == '__main__':
+    a = 0
