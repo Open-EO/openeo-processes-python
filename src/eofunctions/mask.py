@@ -88,10 +88,3 @@ def mask(rasters, mask_type, expression = '', replacement = np.nan):
 
 
 
-#rasters = np.array([[[1,2,3],[4,5,6],[7,8,9]],[[True,False,False],[False,True,False],[False,False,True]]])
-#masked = mask(rasters, mask_type = 'layer')
-#print(masked)
-
-#rasters = np.array([[[1,2,3],[4,5,6],[7,8,9]],[[2,3,2],[1,5,7],[2,1,2]]])
-#masked = mask(rasters, mask_type = 'expression', expression = 'x < 5')
-#print(masked)
