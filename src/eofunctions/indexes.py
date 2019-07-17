@@ -8,7 +8,7 @@ import numpy as np
 from osgeo import gdal
 
 
-def ndvi(rasters):
+def eo_ndvi(rasters):
     """
     Given data from the red and NIR bands (as 2D numpy arrays), it calculates
     the Normalized Difference Vegetation Index (NDVI).
@@ -34,6 +34,9 @@ def ndvi(rasters):
     denominator = (nir + red)
     ndvi_output = numerator / denominator
 
+    print(np.nanmax(ndvi_output))
+    print(np.nanmin(ndvi_output))
+
     return ndvi_output
 
 
@@ -44,7 +47,7 @@ Normalized Difference Water Index.
 """
 
 
-def ndwi(rasters):
+def eo_ndwi(rasters):
     """
     Given data from the Green and NIR bands (as 2D numpy arrays), it calculates
     the Normalized Difference Water Index (NDWI).

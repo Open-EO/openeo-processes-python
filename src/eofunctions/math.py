@@ -6,7 +6,7 @@ import operator
 import xarray
 import xarray_extras as xar_addons
 import dask
-from eofunctions.utils import is_empty, process
+from eofunctions.eo_utils import is_empty, process
 from eofunctions.errors import *
 
 
@@ -136,7 +136,7 @@ def eo_arctan2(y, x):
     return np.arctan2(y, x)
 
 
-def linear_scale_range(x, input_min, input_max, output_min=0, output_max=1):
+def eo_linear_scale_range(x, input_min, input_max, output_min=0, output_max=1):
     return ((x - input_min) / (input_max - input_min)) * (output_max - output_min) + output_min
 
 
@@ -144,7 +144,7 @@ def eo_eval(x, expression=None):
     return eval(expression)
 
 
-def apply_factor(in_array, factor=1):
+def eo_apply_factor(in_array, factor=1):
     return in_array * factor
 
 

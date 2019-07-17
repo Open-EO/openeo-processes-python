@@ -7,7 +7,7 @@ def eval_datatype(data):
     is_list = isinstance(data, list)
     is_np = isinstance(data, np.ndarray) | (is_list and isinstance(data[0], np.ndarray))
     is_xar = isinstance(data, xarray.DataArray)
-    is_dar = isinstance(data, dask.array)
+    is_dar = isinstance(data, dask.array.core.Array)
     is_num = isinstance(data, (int, float))
 
     if is_np:

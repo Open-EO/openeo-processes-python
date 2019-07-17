@@ -4,7 +4,7 @@ import sys
 import functools
 import operator
 from eofunctions.math import eo_min, eo_max, eo_is_valid
-from eofunctions.utils import is_empty, list2nparray, build_multi_dim_index
+from eofunctions.eo_utils import is_empty, list2nparray, build_multi_dim_index
 
 
 def eo_array_contains(data, element):

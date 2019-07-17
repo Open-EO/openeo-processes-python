@@ -8,12 +8,12 @@ https://open-eo.github.io/openeo-api/v/0.4.0/processreference/ - in comparison t
 import sys
 import numpy as np
 import pandas as pd
-from eofunctions.math import is_valid
+from eofunctions.math import eo_is_valid
 from utils.time import str2time
 
 
 def eo_eq(x, y, delta=None, case_sensitive=True):
-    if not is_valid(x) or not is_valid(y):
+    if not eo_is_valid(x) or not eo_is_valid(y):
         return np.nan
     if (type(x) in [float, int, np.ndarray]) and (type(y) in [float, int, np.ndarray]):
         if type(delta) in [float, int]:
@@ -43,7 +43,7 @@ def eo_neq(x, y, delta=None, case_sensitive=True):
 
 
 def eo_gt(x, y):
-    if not is_valid(x) or not is_valid(y):
+    if not eo_is_valid(x) or not eo_is_valid(y):
         return np.nan
     elif (type(x) == str) and (type(y) == str):
         x_time = str2time(x)
@@ -62,7 +62,7 @@ def eo_gt(x, y):
 
 
 def eo_gte(x, y):
-    if not is_valid(x) or not is_valid(y):
+    if not eo_is_valid(x) or not eo_is_valid(y):
         return np.nan
     elif (type(x) == str) and (type(y) == str):
         x_time = str2time(x)
@@ -81,7 +81,7 @@ def eo_gte(x, y):
 
 
 def eo_lt(x, y):
-    if not is_valid(x) or not is_valid(y):
+    if not eo_is_valid(x) or not eo_is_valid(y):
         return np.nan
     elif (type(x) == str) and (type(y) == str):
         x_time = str2time(x)
@@ -100,7 +100,7 @@ def eo_lt(x, y):
 
 
 def eo_lte(x, y):
-    if not is_valid(x) or not is_valid(y):
+    if not eo_is_valid(x) or not eo_is_valid(y):
         return np.nan
     elif (type(x) == str) and (type(y) == str):
         x_time = str2time(x)
@@ -119,7 +119,7 @@ def eo_lte(x, y):
 
 
 def eo_between(x, min, max, exclude_max=False):
-    if not is_valid(x) or not is_valid(min) or not is_valid(max):
+    if not eo_is_valid(x) or not eo_is_valid(min) or not eo_is_valid(max):
         return np.nan
 
     if type(min) == str:

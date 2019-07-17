@@ -12,8 +12,5 @@ from eofunctions.arrays import *
 from eofunctions.comparison import *
 from eofunctions.mask import *
 from eofunctions.math import *
-from eofunctions.ndvi import *
-from eofunctions.ndwi import *
-from eofunctions.temporal_statistics import *
-from eofunctions.zonal_statistics import *
+from eofunctions.indexes import *
 from eofunctions.texts import *
