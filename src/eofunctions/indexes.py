@@ -34,9 +34,6 @@ def eo_ndvi(rasters):
     denominator = (nir + red)
     ndvi_output = numerator / denominator
 
-    print(np.nanmax(ndvi_output))
-    print(np.nanmin(ndvi_output))
-
     return ndvi_output
 
 
