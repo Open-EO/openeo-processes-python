@@ -29,7 +29,7 @@ def eo_not(x):
 # TODO check the no data value functions if they do the job correctly
 def eo_is_nan(x):
 
-    if isinstance(x, (int, float, np.ndarray, xarray.DataArray, dask.array)):
+    if isinstance(x, (int, float, np.ndarray, xarray.DataArray, dask.array.core.Array)):
         return pd.isnull(x)
     else:
         return True
@@ -37,7 +37,7 @@ def eo_is_nan(x):
 
 def eo_is_nodata(x):
 
-    if isinstance(x, (int, float, np.ndarray, xarray.DataArray, dask.array)):
+    if isinstance(x, (int, float, np.ndarray, xarray.DataArray, dask.array.core.Array)):
         return pd.isnull(x)
     else:
         # if x in [np.nan, None]:
@@ -48,8 +48,8 @@ def eo_is_nodata(x):
 
 def eo_is_valid(x):
 
-    if isinstance(x, (np.ndarray, xarray.DataArray, dask.array)):
-        return ~pd.isnull(x) & (x != np.inf)
+    if isinstance(x, (np.ndarray, xarray.DataArray, dask.array.core.Array)):
+        return (~pd.isnull(x) & (x != np.inf)).all()
     else:
         if x not in [np.nan, np.inf, None]:
             return True
@@ -148,28 +148,41 @@ def eo_apply_factor(in_array, factor=1):
     return in_array * factor
 
 
-# TODO: This function does not work fully yet as specified in
-# https://open-eo.github.io/openeo-api/v/0.4.0/processreference/#count
-# link to a function understanding a process graph is needed
-def eo_count(data, axis=0, expression=None):
+########################################################################################################################
+# Count Process
+########################################################################################################################
 
-    if expression == True:  # explicit check needed
-        if axis is not None:
-            num_of_elems = data.shape[axis]
-        else:
-            num_of_elems = functools.reduce(operator.mul, data.shape, 1)
-    elif isinstance(expression, str):
-        if axis is not None:
-            num_of_elems = np.sum(eval(expression.replace('x', 'data')), axis=axis)
-        else:
-            num_of_elems = np.sum(eval(expression.replace('x', 'data')))
-    else:
-        if axis is not None:
-            num_of_elems = np.sum(eo_is_valid(data), axis=axis)
-        else:
-            num_of_elems = np.sum(eo_is_valid(data))
+@process
+def eo_count():
+    return eoCount()
 
-    return num_of_elems
+
+class eoCount(object):
+    def __init__(self):
+        pass
+
+    @staticmethod
+    def exec_num():
+        pass
+
+    @staticmethod
+    def exec_np(data, dimension=0, expression=None):
+        if expression == True:  # explicit check needed
+            num_of_elems = data.shape[dimension]
+        elif isinstance(expression, str):
+            num_of_elems = np.sum(eval(expression), axis=dimension)
+        else:
+            num_of_elems = np.sum(eo_is_valid(data), axis=dimension)
+
+        return num_of_elems
+
+    @staticmethod
+    def exec_xar():
+        pass
+
+    @staticmethod
+    def exec_da():
+        pass
 
 
 ########################################################################################################################
@@ -802,14 +815,20 @@ class eoSum(object):
         pass
 
     @staticmethod
-    def exec_np(data, ignore_nodata=True, dimension=0):
-        number_elems = eo_count(data, axis=dimension, expression=True)
+    def exec_np(data, ignore_nodata=True, dimension=0, values_add=None):
+        if not values_add:
+            values_add = []
+        number_elems = eo_count(data, axis=dimension, expression=True) + len(values_add)
+
         if number_elems < 2:
             raise SummandMissing
+
         if not ignore_nodata:
-            return np.sum(data, axis=dimension)
+            summand = np.sum(values_add)
+            return np.sum(data, axis=dimension) + summand
         else:
-            return np.nansum(data, axis=dimension)
+            summand = np.nansum(values_add)
+            return np.nansum(data, axis=dimension) + summand
 
     @staticmethod
     def exec_xar(data, ignore_nodata=True, dimension=0):
@@ -835,14 +854,19 @@ class eoSubtract(object):
         pass
 
     @staticmethod
-    def exec_np(data, ignore_nodata=True, dimension=0):
-        number_elems = eo_count(data, axis=dimension, expression=True)
+    def exec_np(data, ignore_nodata=True, dimension=0, values_sub=None):
+        if not values_sub:
+            values_sub = []
+        number_elems = eo_count(data, axis=dimension, expression=True) + len(values_sub)
         if number_elems < 2:
             raise SubtrahendMissing
+
         if not ignore_nodata:
-            return np.sum(-data, axis=dimension)
+            subtrahend = np.sum(-np.array(values_sub))
+            return np.sum(-data, axis=dimension) - subtrahend
         else:
-            return np.nansum(-data, axis=dimension)
+            subtrahend = np.nansum(-np.array(values_sub))
+            return np.nansum(-data, axis=dimension) - subtrahend
 
     @staticmethod
     def exec_xar(data, ignore_nodata=True, dimension=0):
@@ -868,20 +892,24 @@ class eoMultiply(object):
         pass
 
     @staticmethod
-    def exec_np(data, ignore_nodata=True, dimension=0):
-        number_elems = eo_count(data, axis=dimension, expression=True)
+    def exec_np(data, ignore_nodata=True, dimension=0, values_mul=None):
+        if not values_mul:
+            values_mul = []
+        number_elems = eo_count(data, axis=dimension, expression=True) + len(values_mul)
         if number_elems < 2:
             raise MultiplicandMissing
-        nan_idxs = pd.isnull(data)
+
+        values_mul = np.array(values_mul)
         if not ignore_nodata:
-            if np.any(nan_idxs):
-                return np.nan
-            else:
-                data = data[~nan_idxs]
-                return np.apply_along_axis(lambda data: functools.reduce(operator.mul, data, 1), dimension, data)
+            multiplicand = functools.reduce(operator.mul, values_mul, 1)
+            return np.apply_along_axis(lambda data: functools.reduce(operator.mul, data, 1), dimension, data) * multiplicand
         else:
-            data = data[~nan_idxs]
-            return np.apply_along_axis(lambda data: functools.reduce(operator.mul, data, 1), dimension, data)
+            data_nan_idxs = pd.isnull(data)
+            values_nan_idxs = pd.isnull(values_mul)
+            data = data[~data_nan_idxs]
+            values_mul = values_mul[~values_nan_idxs]
+            multiplicand = functools.reduce(operator.mul, values_mul, 1)
+            return np.apply_along_axis(lambda data: functools.reduce(operator.mul, data, 1), dimension, data) * multiplicand
 
     @staticmethod
     def exec_xar(data, ignore_nodata=True, dimension=0):
@@ -911,20 +939,26 @@ class eoDivide(object):
         pass
 
     @staticmethod
-    def exec_np(data, ignore_nodata=True, dimension=0):
-        number_elems = eo_count(data, axis=dimension, expression=True)
+    def exec_np(data, ignore_nodata=True, dimension=0, values_div=None):
+        if not values_div:
+            values_div = []
+        number_elems = eo_count(data, axis=dimension, expression=True) + len(values_div)
         if number_elems < 2:
             raise DivisorMissing
-        nan_idxs = pd.isnull(data)
+
+        values_div = np.array(values_div)
         if not ignore_nodata:
-            if np.any(nan_idxs):
-                return np.nan
-            else:
-                data = data[~nan_idxs]
-                return np.apply_along_axis(lambda data: functools.reduce(operator.truediv, data), dimension, data)
+            divisor = functools.reduce(operator.truediv, values_div, 1)
+            return np.apply_along_axis(lambda data: functools.reduce(operator.mul, data, 1), dimension,
+                                       data) / divisor
         else:
-            data = data[~nan_idxs]
-            return np.apply_along_axis(lambda data: functools.reduce(operator.truediv, data), dimension, data)
+            data_nan_idxs = pd.isnull(data)
+            values_nan_idxs = pd.isnull(values_div)
+            data = data[~data_nan_idxs]
+            values_div = values_div[~values_nan_idxs]
+            divisor = functools.reduce(operator.mul, values_div, 1)
+            return np.apply_along_axis(lambda data: functools.reduce(operator.mul, data, 1), dimension,
+                                       data) / divisor
 
     @staticmethod
     def exec_xar():

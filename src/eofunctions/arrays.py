@@ -6,6 +6,8 @@ import operator
 from eofunctions.math import eo_min, eo_max, eo_is_valid
 from eofunctions.eo_utils import is_empty, list2nparray, build_multi_dim_index
 
+from eofunctions.eo_utils import process
+
 
 def eo_array_contains(data, element):
     return element in data
@@ -23,69 +25,172 @@ def eo_array_element(data, index, return_nodata=False):
     return element
 
 
-def eo_first(data, axis=0, ignore_nodata=True):
+########################################################################################################################
+# First Process
+########################################################################################################################
 
-    first_elem = np.nan
-    if not is_empty(data):
-        dims = len(data.shape)
-        if ignore_nodata:
-            nan_mask = ~pd.isnull(data)
-            first_elem_idx = np.argmax(nan_mask, axis=axis)
-            string_select = build_multi_dim_index("first_elem_idx", data.shape, axis)
-            first_elem = eval("data[{}]".format(string_select))
+@process
+def eo_first():
+    return eoFirst()
+
+
+class eoFirst(object):
+    def __init__(self):
+        pass
+
+    @staticmethod
+    def exec_num():
+        pass
+
+    @staticmethod
+    def exec_np(data, dimension=0, ignore_nodata=True):
+        first_elem = np.nan
+        if not is_empty(data):
+            dims = len(data.shape)
+            if ignore_nodata:
+                nan_mask = ~pd.isnull(data)
+                first_elem_idx = np.argmax(nan_mask, axis=dimension)
+                string_select = build_multi_dim_index("first_elem_idx", data.shape, dimension)
+                first_elem = eval("data[{}]".format(string_select))
+            else:
+                strings_select = [":"] * dims
+                strings_select[dimension] = "0"
+                first_elem = eval("data[{}]".format(",".join(strings_select)))
+
+        return first_elem
+
+    @staticmethod
+    def exec_xar():
+        pass
+
+    @staticmethod
+    def exec_da():
+        pass
+
+
+########################################################################################################################
+# Last Process
+########################################################################################################################
+
+@process
+def eo_last():
+    return eoLast()
+
+
+class eoLast(object):
+    def __init__(self):
+        pass
+
+    @staticmethod
+    def exec_num():
+        pass
+
+    @staticmethod
+    def exec_np(data, dimension=0, ignore_nodata=True):
+        last_elem = np.nan
+        if not is_empty(data):
+            dims = len(data.shape)
+            if ignore_nodata:
+                nan_mask = ~pd.isnull(data)
+                last_elem_idx = np.argmax(np.flip(nan_mask, axis=dimension), axis=dimension)
+                string_select = build_multi_dim_index("last_elem_idx", data.shape, dimension)
+                last_elem = eval("data[{}]".format(string_select))
+            else:
+                strings_select = [":"] * dims
+                strings_select[dimension] = "-1"
+                last_elem = eval("data[{}]".format(",".join(strings_select)))
+
+        return last_elem
+
+    @staticmethod
+    def exec_xar():
+        pass
+
+    @staticmethod
+    def exec_da():
+        pass
+
+
+########################################################################################################################
+# Order Process
+########################################################################################################################
+
+@process
+def eo_order():
+    return eoOrder()
+
+
+class eoOrder(object):
+    def __init__(self):
+        pass
+
+    @staticmethod
+    def exec_num():
+        pass
+
+    @staticmethod
+    def exec_np(data, dimension=0, asc=True, nodata=None):
+        data = data.astype(float)
+
+        if asc:
+            permutation_idxs = np.argsort(data, kind='mergesort', axis=dimension)
+        else:  # [::-1] not possible
+            permutation_idxs = np.argsort(-data, kind='mergesort', axis=dimension)
+
+        if nodata is None:
+            string_select = build_multi_dim_index("permutation_idxs", data.shape, dimension)
+            data_sorted = eval("data[{}]".format(string_select))
+            return permutation_idxs[~np.isnan(data_sorted)]
+        elif nodata == False:  # TODO: can this be done in an easier way?
+            string_select = build_multi_dim_index("permutation_idxs", data.shape, dimension)
+            string_select_flip = build_multi_dim_index("permutation_idxs_flip", data.shape, dimension)
+            data_sorted = eval("data[{}]".format(string_select))
+            nan_idxs = pd.isnull(data_sorted)
+            permutation_idxs_flip = np.flip(permutation_idxs, axis=dimension)
+            data_sorted_flip = eval("data[{}]".format(string_select_flip))
+            nan_idxs_flip = pd.isnull(data_sorted_flip)
+            permutation_idxs_flip[~nan_idxs_flip] = permutation_idxs[~nan_idxs]
+            return permutation_idxs_flip
         else:
-            strings_select = [":"]*dims
-            strings_select[axis] = "0"
-            first_elem = eval("data[{}]".format(",".join(strings_select)))
+            return permutation_idxs
 
-    return first_elem
+    @staticmethod
+    def exec_xar():
+        pass
 
+    @staticmethod
+    def exec_da():
+        pass
 
-def eo_last(data, axis=0, ignore_nodata=True):
+########################################################################################################################
+# Rearrange Process
+########################################################################################################################
 
-    last_elem = np.nan
-    if not is_empty(data):
-        dims = len(data.shape)
-        if ignore_nodata:
-            nan_mask = ~pd.isnull(data)
-            last_elem_idx = np.argmax(np.flip(nan_mask, axis=axis), axis=axis)
-            string_select = build_multi_dim_index("last_elem_idx", data.shape, axis)
-            last_elem = eval("data[{}]".format(string_select))
-        else:
-            strings_select = [":"] * dims
-            strings_select[axis] = "-1"
-            last_elem = eval("data[{}]".format(",".join(strings_select)))
-
-    return last_elem
+@process
+def eo_rearrange():
+    return eoOrder()
 
 
-def eo_order(data, axis=0, asc=True, nodata=None):
+class eoRearrange(object):
+    def __init__(self):
+        pass
 
-    data = data.astype(float)
+    @staticmethod
+    def exec_num():
+        pass
 
-    if asc:
-        permutation_idxs = np.argsort(data, kind='mergesort', axis=axis)
-    else:  # [::-1] not possible
-        permutation_idxs = np.argsort(-data, kind='mergesort', axis=axis)
+    @staticmethod
+    def exec_np(data, order, dimension=0):
+        string_select = build_multi_dim_index("order", data.shape, dimension)
+        return eval("data[{}]".format(string_select))
 
-    if nodata == False:  # TODO: can this be done in an easier way?
-        string_select = build_multi_dim_index("permutation_idxs", data.shape, axis)
-        string_select_flip = build_multi_dim_index("permutation_idxs_flip", data.shape, axis)
-        data_sorted = eval("data[{}]".format(string_select))
-        nan_idxs = pd.isnull(data_sorted)
-        permutation_idxs_flip = np.flip(permutation_idxs, axis=axis)
-        data_sorted_flip = eval("data[{}]".format(string_select_flip))
-        nan_idxs_flip = pd.isnull(data_sorted_flip)
-        permutation_idxs_flip[~nan_idxs_flip] = permutation_idxs[~nan_idxs]
-        return permutation_idxs_flip
-    else:
-        return permutation_idxs
+    @staticmethod
+    def exec_xar():
+        pass
 
-
-def eo_rearrange(data, order, axis=0):
-
-    string_select = build_multi_dim_index("order", data.shape, axis)
-    return eval("data[{}]".format(string_select))
+    @staticmethod
+    def exec_da():
+        pass
 
 
 # rearrange(data, order(data, nodata)) could be used, but is probably slower than sorting the array directly

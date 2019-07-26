@@ -3,15 +3,16 @@ import xarray
 import dask
 import copy
 
+
 def eval_datatype(data):
     is_list = isinstance(data, list)
-    is_np = isinstance(data, np.ndarray) | (is_list and isinstance(data[0], np.ndarray))
+    is_np = isinstance(data, np.ndarray) | is_list
     is_xar = isinstance(data, xarray.DataArray)
     is_dar = isinstance(data, dask.array.core.Array)
     is_num = isinstance(data, (int, float))
 
     if is_np:
-        datatype = "numpy"
+        datatype = "np"
     elif is_xar:
         datatype = "xar"
     elif is_dar:
@@ -24,14 +25,23 @@ def eval_datatype(data):
     return datatype
 
 
-def process(processor):
+def process(processor, data_key="data"):
     def fun_wrapper(*args, **kwargs):
         cls = processor()
-        datatype = eval_datatype(args[0])
-        if datatype == "numpy":
+
+        if not args:
+            datatype = eval_datatype(kwargs[data_key])
+        else:
+            datatype = eval_datatype(args[0])
+
+        if datatype == "np":
             cls_fun = getattr(cls, "exec_np")
-            if isinstance(args[0], list):
-                args[0] = list2nparray(args[0])
+            if not args:
+                if isinstance(kwargs[data_key], list):
+                    kwargs[data_key] = list2nparray(kwargs[data_key])
+            else:
+                if isinstance(args[0], list):
+                    args[0] = list2nparray(args[0])
         elif datatype == "xar":
             cls_fun = getattr(cls, "exec_xar")
         elif datatype == "dar":
