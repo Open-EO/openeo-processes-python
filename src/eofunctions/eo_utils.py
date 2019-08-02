@@ -1,7 +1,9 @@
-import numpy as np
 import xarray
 import dask
 import copy
+
+import numpy as np
+import pandas as pd
 
 
 def eval_datatype(data):
@@ -41,7 +43,10 @@ def process(processor, data_key="data"):
                     kwargs[data_key] = list2nparray(kwargs[data_key])
             else:
                 if isinstance(args[0], list):
+                    args = list(args)
                     args[0] = list2nparray(args[0])
+                    args = tuple(args)
+
         elif datatype == "xar":
             cls_fun = getattr(cls, "exec_xar")
         elif datatype == "dar":
@@ -54,14 +59,6 @@ def process(processor, data_key="data"):
         return cls_fun(*args, **kwargs)
 
     return fun_wrapper
-
-
-def is_empty(data):
-    if len(data) == 0:
-        return True
-    else:
-        return False
-
 
 def list2nparray(x):
     x_tmp = np.array(x)
@@ -89,3 +86,46 @@ def build_multi_dim_index(index_name, shape, axis):
             strings_select.append("np.arange({})[{}]".format(n, expand_dim_exprs[i]))
 
     return ",".join(strings_select)
+
+
+def eo_is_empty(data):
+    if len(data) == 0:
+        return True
+    else:
+        return False
+
+# TODO check the no data value functions if they do the job correctly
+def eo_is_nan(x):
+    if isinstance(x, (int, float, np.ndarray, xarray.DataArray, dask.array.core.Array)):
+        return pd.isnull(x)
+    else:
+        return True
+
+
+def eo_is_nodata(x):
+
+    if isinstance(x, (int, float, np.ndarray, xarray.DataArray, dask.array.core.Array)):
+        return pd.isnull(x)
+    else:
+        # if x in [np.nan, None]:
+        #    return True
+        # else:
+        return False
+
+
+def eo_is_valid(x, unary=True):
+
+    if isinstance(x, (np.ndarray, xarray.DataArray, dask.array.core.Array)):
+        if eo_is_empty(x):
+            return False
+        else:
+            is_valid = (~pd.isnull(x) & (x != np.inf))
+            if unary:
+                return is_valid.all()
+            else:
+                return is_valid
+    else:
+        if x not in [np.nan, np.inf, None]:
+            return True
+        else:
+            return False

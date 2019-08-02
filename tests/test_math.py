@@ -349,3 +349,33 @@ def test_linear_scale_range():
 def test_apply_factor():
     arr = np.random.randn(10)
     assert np.any(eof.apply_factor(arr) == arr)
+
+
+def test_extrema():
+    assert_list_items(eof.eo_extrema([1, 0, 3, 2]), [0, 3])
+    assert_list_items(eof.eo_extrema([5, 2.5, np.nan, -0.7]), [-0.7, 5])
+    assert_list_items(eof.eo_extrema([1, 0, 3, np.nan, 2], ignore_nodata=False), [np.nan, np.nan])
+    assert_list_items(eof.eo_extrema([]), [np.nan, np.nan])
+
+def test_sum():
+    assert eof.eo_sum_([5, 1]) == 6
+    assert eof.eo_sum_([-2, 4, 2.5]) == 4.5
+    assert np.isnan(eof.eo_sum_([1, np.nan], ignore_nodata=False))
+
+
+def test_subtract():
+    assert eof.eo_subtract([5, 10]) == -5
+    assert eof.eo_subtract([-2, 4, -2]) == -4
+    assert np.isnan(eof.eo_subtract([1, np.nan], ignore_nodata=False))
+
+
+def test_multiply():
+    assert eof.eo_multiply([5, 0]) == 0
+    assert eof.eo_multiply([-2, 4, 2.5]) == -20
+    assert np.isnan(eof.eo_multiply([1, np.nan], ignore_nodata=False))
+
+
+def test_divide():
+    assert eof.eo_divide([15, 5]) == 3
+    assert eof.eo_divide([-2, 4, 2.5]) == -0.2
+    assert np.isnan(eof.eo_divide([1, np.nan], ignore_nodata=False))

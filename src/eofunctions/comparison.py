@@ -6,10 +6,56 @@ https://open-eo.github.io/openeo-api/v/0.4.0/processreference/ - in comparison t
 
 
 import sys
+
 import numpy as np
 import pandas as pd
-from eofunctions.math import eo_is_valid
+
 from utils.time import str2time
+
+from eofunctions.eo_utils import eo_is_valid
+
+
+
+def eo_and(expressions, ignore_nodata=True):
+    if is_empty(expressions):
+        return np.nan
+    expressions_copy = np.array(expressions)
+    if not ignore_nodata:
+        expressions_copy[np.isnan(expressions)] = False
+        if np.all(expressions) and not np.all(expressions_copy):
+            return np.nan
+        else:
+            return np.all(expressions_copy)
+    else:
+        expressions_valid = expressions_copy[~np.isnan(expressions)]
+        return False if len(expressions_valid) == 0 else np.all(expressions_valid)
+
+
+def eo_or(expressions, ignore_nodata=True):
+    if is_empty(expressions):
+        return np.nan
+    expressions_copy = np.array(expressions)
+    if not ignore_nodata:
+        expressions_copy[np.isnan(expressions)] = False
+        if np.any(expressions) and not np.any(expressions_copy):
+            return np.nan
+        else:
+            return np.any(expressions_copy)
+    else:
+        expressions_valid = expressions_copy[~np.isnan(expressions)]
+        return False if len(expressions_valid) == 0 else np.any(expressions_valid)
+
+
+def eo_xor(expressions, ignore_nodata=True):
+    if is_empty(expressions):
+        return np.nan
+    if not ignore_nodata:
+        if np.any(np.isnan(expressions)):
+            return np.nan
+        else:
+            return np.nansum(expressions) == 1
+    else:
+        return np.nansum(expressions) == 1
 
 
 def eo_eq(x, y, delta=None, case_sensitive=True):

@@ -5,7 +5,6 @@ Normalized Difference Vegetation Index.
 
 
 import numpy as np
-from osgeo import gdal
 
 
 def eo_ndvi(rasters):

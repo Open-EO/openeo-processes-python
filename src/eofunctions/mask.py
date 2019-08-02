@@ -6,6 +6,7 @@ https://open-eo.github.io/openeo-api/v/0.4.0/processreference/ for mask function
 
 
 import sys
+
 import numpy as np
 
 

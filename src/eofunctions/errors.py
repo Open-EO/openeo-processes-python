@@ -45,3 +45,10 @@ class DivisorMissing(Exception):
     def __str__(self):
         return self.message
 
+
+class IndexOutOfBounds(KeyError):
+    def __init__(self):
+        self.message = "The array has no element with the specified index."
+
+    def __str__(self):
+        return self.message

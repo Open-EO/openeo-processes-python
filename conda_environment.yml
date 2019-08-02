@@ -4,6 +4,8 @@ channels:
 - defaults
 dependencies:
 - python=3.6
-# - pip:
-#     - xarray-extras
-#     - dask[complete]
+- numpy
+- xarray
+- dask
+- pip:
+     - xarray-extras

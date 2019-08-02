@@ -1,20 +1,28 @@
 import sys
+import dask
+import xarray
+import operator
+import functools
+
 import numpy as np
 import pandas as pd
-import functools
-import operator
-import xarray
 import xarray_extras as xar_addons
-import dask
-from eofunctions.eo_utils import is_empty, process
-from eofunctions.errors import *
 
+from eofunctions.eo_utils import eo_is_empty
+from eofunctions.eo_utils import process
+from eofunctions.arrays import eo_count
+
+from eofunctions.errors import QuantilesParameterConflict
+from eofunctions.errors import QuantilesParameterMissing
+from eofunctions.errors import SummandMissing
+from eofunctions.errors import SubtrahendMissing
+from eofunctions.errors import MultiplicandMissing
+from eofunctions.errors import DivisorMissing
 
 # TODO: add input argument validation decorator to each class
 ########################################################################################################################
 # General Functions
 ########################################################################################################################
-
 def eo_e():
     return np.e
 
@@ -25,36 +33,6 @@ def eo_pi():
 
 def eo_not(x):
     return not x
-
-# TODO check the no data value functions if they do the job correctly
-def eo_is_nan(x):
-
-    if isinstance(x, (int, float, np.ndarray, xarray.DataArray, dask.array.core.Array)):
-        return pd.isnull(x)
-    else:
-        return True
-
-
-def eo_is_nodata(x):
-
-    if isinstance(x, (int, float, np.ndarray, xarray.DataArray, dask.array.core.Array)):
-        return pd.isnull(x)
-    else:
-        # if x in [np.nan, None]:
-        #    return True
-        # else:
-        return False
-
-
-def eo_is_valid(x):
-
-    if isinstance(x, (np.ndarray, xarray.DataArray, dask.array.core.Array)):
-        return (~pd.isnull(x) & (x != np.inf)).all()
-    else:
-        if x not in [np.nan, np.inf, None]:
-            return True
-        else:
-            return False
 
 
 def eo_floor(x):
@@ -146,43 +124,6 @@ def eo_eval(x, expression=None):
 
 def eo_apply_factor(in_array, factor=1):
     return in_array * factor
-
-
-########################################################################################################################
-# Count Process
-########################################################################################################################
-
-@process
-def eo_count():
-    return eoCount()
-
-
-class eoCount(object):
-    def __init__(self):
-        pass
-
-    @staticmethod
-    def exec_num():
-        pass
-
-    @staticmethod
-    def exec_np(data, dimension=0, expression=None):
-        if expression == True:  # explicit check needed
-            num_of_elems = data.shape[dimension]
-        elif isinstance(expression, str):
-            num_of_elems = np.sum(eval(expression), axis=dimension)
-        else:
-            num_of_elems = np.sum(eo_is_valid(data), axis=dimension)
-
-        return num_of_elems
-
-    @staticmethod
-    def exec_xar():
-        pass
-
-    @staticmethod
-    def exec_da():
-        pass
 
 
 ########################################################################################################################
@@ -569,6 +510,55 @@ class eoVariance(object):
 
     @staticmethod
     def exec_da(self):
+        pass
+
+########################################################################################################################
+# Extrema Process
+########################################################################################################################
+
+@process
+def eo_extrema():
+    return EOExtrema()
+
+
+class EOExtrema(object):
+    def __init__(self):
+        pass
+
+    @staticmethod
+    def exec_num():
+        pass
+
+    @staticmethod
+    def exec_np(data, dimension=0, ignore_nodata=True):
+        """
+        Returns the extrema of the input data, i.e. the minimum and the maximum value.
+
+        Parameters
+        ----------
+        data: np.array
+            Input data as a numpy array.
+        dimension: int, optional
+            Dimension/axis of interest (0 is default).
+        ignore_nodata: bool, optional
+            Specifies if np.nan values are ignored or not (True is default).
+
+        Returns
+        -------
+        list of numpy arrays
+            Minimum and maximum value.
+        """
+        min_val = eo_min(data, axis=dimension, ignore_nodata=ignore_nodata)
+        max_val = eo_max(data, axis=dimension, ignore_nodata=ignore_nodata)
+
+        return [min_val, max_val]
+
+    @staticmethod
+    def exec_xar():
+        pass
+
+    @staticmethod
+    def exec_da():
         pass
 
 
@@ -967,6 +957,8 @@ class eoDivide(object):
     @staticmethod
     def exec_da():
         pass
+
+
 
 
 if __name__ == '__main__':
