@@ -6,7 +6,7 @@ Normalized Difference Vegetation Index.
 
 import numpy as np
 
-
+# TODO: reimplement to class function
 def eo_ndvi(rasters):
     """
     Given data from the red and NIR bands (as 2D numpy arrays), it calculates

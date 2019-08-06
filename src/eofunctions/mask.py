@@ -9,7 +9,7 @@ import sys
 
 import numpy as np
 
-
+# TODO: reimplement to class function
 def mask(rasters, mask_type, expression = '', replacement = np.nan):
     """
     Applies a mask to the specified layers.

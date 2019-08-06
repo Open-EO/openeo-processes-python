@@ -8,6 +8,7 @@ try:
 except DistributionNotFound:
     __version__ = 'unknown'
 
+from eofunctions.checks import *
 from eofunctions.arrays import *
 from eofunctions.comparison import *
 from eofunctions.mask import *

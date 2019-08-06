@@ -1,14 +1,10 @@
-import sys
-import functools
-import operator
-
 import numpy as np
 import pandas as pd
 
-from eofunctions.eo_utils import eo_is_valid
-from eofunctions.eo_utils import eo_is_empty
 from eofunctions.eo_utils import build_multi_dim_index
 from eofunctions.eo_utils import process
+from eofunctions.checks import eo_is_valid
+from eofunctions.checks import eo_is_empty
 
 from eofunctions.errors import IndexOutOfBounds
 
@@ -23,10 +19,10 @@ def eo_array_contains(data, element):
 
 @process
 def eo_array_element():
-    return eoArrayElement()
+    return EOArrayElement()
 
 
-class eoArrayElement(object):
+class EOArrayElement(object):
     def __init__(self):
         pass
 
@@ -85,10 +81,10 @@ class eoArrayElement(object):
 
 @process
 def eo_count():
-    return eoCount()
+    return EOCount()
 
 
-class eoCount(object):
+class EOCount(object):
     def __init__(self):
         pass
 
@@ -130,7 +126,7 @@ class eoCount(object):
             data = expression(data)
             count = np.sum(data, axis=dimension)
         else:
-            count = np.sum(eo_is_valid(data, unary=False), axis=dimension)
+            count = np.sum(eo_is_valid(data, reduce=False), axis=dimension)
 
         return count
 

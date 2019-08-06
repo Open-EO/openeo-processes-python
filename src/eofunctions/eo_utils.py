@@ -1,9 +1,9 @@
 import xarray
 import dask
 import copy
+import datetime
 
 import numpy as np
-import pandas as pd
 
 
 def eval_datatype(data):
@@ -11,7 +11,9 @@ def eval_datatype(data):
     is_np = isinstance(data, np.ndarray) | is_list
     is_xar = isinstance(data, xarray.DataArray)
     is_dar = isinstance(data, dask.array.core.Array)
-    is_num = isinstance(data, (int, float))
+    is_num = isinstance(data, (int, float, str, np.integer, np.float))
+    is_datetime = isinstance(data, datetime.datetime)
+    is_none = data is None
 
     if is_np:
         datatype = "np"
@@ -21,6 +23,10 @@ def eval_datatype(data):
         datatype = "dar"
     elif is_num:
         datatype = "num"
+    elif is_none:
+        datatype = "none"
+    elif is_datetime:
+        datatype = "dt"
     else:
         datatype = None
 
@@ -51,7 +57,7 @@ def process(processor, data_key="data"):
             cls_fun = getattr(cls, "exec_xar")
         elif datatype == "dar":
             cls_fun = getattr(cls, "exec_dar")
-        elif datatype == "num":
+        elif datatype in ["num", "none", "dt"]:
             cls_fun = getattr(cls, "exec_num")
         else:
             raise Exception('Datatype unknown.')
@@ -59,6 +65,7 @@ def process(processor, data_key="data"):
         return cls_fun(*args, **kwargs)
 
     return fun_wrapper
+
 
 def list2nparray(x):
     x_tmp = np.array(x)
@@ -86,46 +93,3 @@ def build_multi_dim_index(index_name, shape, axis):
             strings_select.append("np.arange({})[{}]".format(n, expand_dim_exprs[i]))
 
     return ",".join(strings_select)
-
-
-def eo_is_empty(data):
-    if len(data) == 0:
-        return True
-    else:
-        return False
-
-# TODO check the no data value functions if they do the job correctly
-def eo_is_nan(x):
-    if isinstance(x, (int, float, np.ndarray, xarray.DataArray, dask.array.core.Array)):
-        return pd.isnull(x)
-    else:
-        return True
-
-
-def eo_is_nodata(x):
-
-    if isinstance(x, (int, float, np.ndarray, xarray.DataArray, dask.array.core.Array)):
-        return pd.isnull(x)
-    else:
-        # if x in [np.nan, None]:
-        #    return True
-        # else:
-        return False
-
-
-def eo_is_valid(x, unary=True):
-
-    if isinstance(x, (np.ndarray, xarray.DataArray, dask.array.core.Array)):
-        if eo_is_empty(x):
-            return False
-        else:
-            is_valid = (~pd.isnull(x) & (x != np.inf))
-            if unary:
-                return is_valid.all()
-            else:
-                return is_valid
-    else:
-        if x not in [np.nan, np.inf, None]:
-            return True
-        else:
-            return False

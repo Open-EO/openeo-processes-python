@@ -4,20 +4,20 @@ given filter criteria are represented by True and those that did not by False. S
 https://open-eo.github.io/openeo-api/v/0.4.0/processreference/ - in comparison the gt, gte, lt, lte and between functions
 """
 
-
-import sys
-
 import numpy as np
 import pandas as pd
 
 from utils.time import str2time
 
-from eofunctions.eo_utils import eo_is_valid
+from eofunctions.checks import eo_is_empty
+from eofunctions.checks import eo_is_valid
 
+# TODO: refactor all functions to class functions
 
 
 def eo_and(expressions, ignore_nodata=True):
-    if is_empty(expressions):
+    """Checks if all of the array values are True."""
+    if eo_is_empty(expressions):
         return np.nan
     expressions_copy = np.array(expressions)
     if not ignore_nodata:
@@ -32,7 +32,8 @@ def eo_and(expressions, ignore_nodata=True):
 
 
 def eo_or(expressions, ignore_nodata=True):
-    if is_empty(expressions):
+    """Checks if at least one of the array values is True."""
+    if eo_is_empty(expressions):
         return np.nan
     expressions_copy = np.array(expressions)
     if not ignore_nodata:
@@ -47,7 +48,8 @@ def eo_or(expressions, ignore_nodata=True):
 
 
 def eo_xor(expressions, ignore_nodata=True):
-    if is_empty(expressions):
+    """Checks if exactly one of the array values is True."""
+    if eo_is_empty(expressions):
         return np.nan
     if not ignore_nodata:
         if np.any(np.isnan(expressions)):
@@ -175,11 +177,11 @@ def eo_between(x, min, max, exclude_max=False):
     if type(x) == str:
         x = str2time(x)
 
-    min = np.min(np.array(min))
+    min = np.min(np.array(min))  # cast to np.array because of datetime objects
     if exclude_max:
-        max = np.min(np.array(max))
+        max = np.min(np.array(max))  # cast to np.array because of datetime objects
     else:
-        max = np.max(np.array(max))
+        max = np.max(np.array(max))  # cast to np.array because of datetime objects
 
     if eo_lt(max, min):
         return False

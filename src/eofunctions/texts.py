@@ -1,3 +1,5 @@
+# TODO: should we remove this and outsource this to the mapping of the openEO processes?
+
 from utils.text import text_begins, text_ends, text_contains, text_merge
 
 

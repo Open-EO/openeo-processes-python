@@ -1,6 +1,3 @@
-import sys
-import dask
-import xarray
 import operator
 import functools
 
@@ -8,9 +5,12 @@ import numpy as np
 import pandas as pd
 import xarray_extras as xar_addons
 
-from eofunctions.eo_utils import eo_is_empty
+
 from eofunctions.eo_utils import process
+from eofunctions.eo_utils import build_multi_dim_index
 from eofunctions.arrays import eo_count
+from eofunctions.checks import eo_is_empty
+from eofunctions.checks import eo_is_valid
 
 from eofunctions.errors import QuantilesParameterConflict
 from eofunctions.errors import QuantilesParameterMissing
@@ -19,9 +19,10 @@ from eofunctions.errors import SubtrahendMissing
 from eofunctions.errors import MultiplicandMissing
 from eofunctions.errors import DivisorMissing
 
-# TODO: add input argument validation decorator to each class
+
+# TODO: what should we do with numbers in case of reducers?
 ########################################################################################################################
-# General Functions
+# General Functions (Data type/array independent functions)
 ########################################################################################################################
 def eo_e():
     return np.e
@@ -53,13 +54,6 @@ def eo_ln(x):
 
 def eo_log(x, base):
     return np.log(x)/np.log(base)
-
-
-def eo_mod(x, y):
-    if not eo_is_valid(x) or not eo_is_valid(y):
-        return np.nan
-    else:
-        return x % y
 
 
 def eo_cos(x):
@@ -127,25 +121,113 @@ def eo_apply_factor(in_array, factor=1):
 
 
 ########################################################################################################################
+# Mod Process
+########################################################################################################################
+
+@process
+def eo_mod():
+    return EOMod()
+
+
+class EOMod(object):
+
+    @staticmethod
+    def exec_num(x, y):
+        """
+        Remainder after division of x by y. It returns np.nan if one of both values is not valid.
+
+        Parameters
+        ----------
+        x: int, float
+            A number to be used as dividend.
+        y: int, float
+            A number to be used as divisor.
+
+        Returns
+        -------
+        float
+
+        """
+        if not eo_is_valid(x) or not eo_is_valid(y):
+            return np.nan
+        else:
+            return x % y
+
+    @staticmethod
+    def exec_np(x, y):
+        """
+        Remainder after division of 'x' by 'y'. It returns np.nan if one of both arrays is not valid.
+
+        Parameters
+        ----------
+        x: np.array
+            An array to be used as dividend.
+        y: np.array
+            An array to be used as divisor.
+
+        Returns
+        -------
+        np.array
+
+        """
+        if not eo_is_valid(x) or not eo_is_valid(y):
+            return np.nan
+        else:
+            return np.mod(x, y)
+
+    @staticmethod
+    def exec_xar():
+        pass
+
+    @staticmethod
+    def exec_da(self):
+        pass
+
+
+########################################################################################################################
 # Int Process
 ########################################################################################################################
 
 @process
 def eo_int():
-    return eoInt()
+    return EOInt()
 
 
-class eoInt(object):
-    def __init__(self):
-        pass
+class EOInt(object):
 
     @staticmethod
-    def exec_num(data):
-        return int(data)
+    def exec_num(x):
+        """
+        The integer part of the real number 'x'.
+
+        Parameters
+        ----------
+        x: int, float
+            A number.
+
+        Returns
+        -------
+        int
+            Integer part of the number.
+        """
+        return int(x)
 
     @staticmethod
-    def exec_np(data):
-        return data.astype(int)
+    def exec_np(x):
+        """
+        The integer part of the array 'x'.
+
+        Parameters
+        ----------
+        x: np.array
+            An array.
+
+        Returns
+        -------
+        np.array
+            Integer part of the numbers in the array.
+        """
+        return x.astype(int)
 
     @staticmethod
     def exec_xar():
@@ -162,20 +244,64 @@ class eoInt(object):
 
 @process
 def eo_round():
-    return eoRound()
+    return EORound()
 
 
-class eoRound(object):
-    def __init__(self):
-        pass
+class EORound(object):
 
     @staticmethod
-    def exec_num(data, p=0):
-        return round(data, p)
+    def exec_num(x, p=0):
+        """
+        Rounds a real number 'x' to specified precision 'p'.
+
+        Parameters
+        ----------
+        x: int, float
+            A number.
+        p: int, optional
+            A positive number specifies the number of digits after the decimal point to round to.
+            A negative number means rounding to a power of ten, so for example -2 rounds to the nearest hundred.
+            Defaults to 0.
+        Returns
+        -------
+        int, float
+            Rounded number.
+
+        Notes
+        -----
+        If the fractional part of x is halfway between two integers, one of which is even and the other odd, then the
+        even number is returned. This behaviour follows IEEE Standard 754. This kind of rounding is also called
+        "rounding to nearest" or "banker's rounding". It minimizes rounding errors that result from consistently
+        rounding a midpoint value in a single direction.
+        """
+        return round(x, p)
 
     @staticmethod
-    def exec_np(data, p=0):
-        return np.around(data, p)
+    def exec_np(x, p=0):
+        """
+        Rounds an array 'x' to specified precision 'p'.
+
+        Parameters
+        ----------
+        x: np.array
+            An array.
+        p: int, optional
+            A positive number specifies the number of digits after the decimal point to round to.
+            A negative number means rounding to a power of ten, so for example -2 rounds to the nearest hundred.
+            Defaults to 0.
+        Returns
+        -------
+        np.array
+            Rounded array.
+
+        Notes
+        -----
+        If the fractional part of x is halfway between two integers, one of which is even and the other odd, then the
+        even number is returned. This behaviour follows IEEE Standard 754. This kind of rounding is also called
+        "rounding to nearest" or "banker's rounding". It minimizes rounding errors that result from consistently
+        rounding a midpoint value in a single direction.
+        """
+        return np.around(x, p)
 
     @staticmethod
     def exec_xar():
@@ -192,12 +318,10 @@ class eoRound(object):
 
 @process
 def eo_absolute():
-    return eoAbsolute()
+    return EOAbsolute()
 
 
-class eoAbsolute(object):
-    def __init__(self):
-        pass
+class EOAbsolute(object):
 
     @staticmethod
     def exec_num(data):
@@ -221,13 +345,11 @@ class eoAbsolute(object):
 ########################################################################################################################
 
 @process
-def eo_sign():
-    return eoSign()
+def eo_sgn():
+    return EOSgn()
 
 
-class eoSign(object):
-    def __init__(self):
-        pass
+class EOSgn(object):
 
     @staticmethod
     def exec_num(data):
@@ -252,12 +374,10 @@ class eoSign(object):
 
 @process
 def eo_sqrt():
-    return eoSqrt()
+    return EOSqrt()
 
 
-class eoSqrt(object):
-    def __init__(self):
-        pass
+class EOSqrt(object):
 
     @staticmethod
     def exec_num(data):
@@ -282,15 +402,28 @@ class eoSqrt(object):
 
 @process
 def eo_power():
-    return eoPower()
+    return EOPower()
 
 
-class eoPower(object):
-    def __init__(self):
-        pass
+class EOPower(object):
 
     @staticmethod
     def exec_num(base, p):
+        """
+        Computes the exponentiation for the base 'base' raised to the power of 'p'.
+        np.nan is returned if any of the arguments is not valid.
+
+        Parameters
+        ----------
+        base: int, float
+            The numerical base.
+        p: int, float
+            The numerical exponent.
+        Returns
+        -------
+        int, float
+            The computed value for 'base' raised to the power of 'p'.
+        """
         if not eo_is_valid(base) or not eo_is_valid(p):
             return np.nan
         else:
@@ -298,17 +431,29 @@ class eoPower(object):
 
     @staticmethod
     def exec_np(base, p):
+        """
+        Computes the exponentiation for the base 'base' raised to the power of 'p'.
+        np.nan is returned if any of the arguments is not valid.
+
+        Parameters
+        ----------
+        base: np.array
+            A base array.
+        p: int, float
+            The numerical exponent.
+        Returns
+        -------
+        np.array
+            The computed array for 'base' raised to the power of 'p'.
+        """
         if not np.all(eo_is_valid(base)) or not eo_is_valid(p):
             return np.nan
         else:
             return np.power(base, float(p))
 
     @staticmethod
-    def exec_xar(base, p):
-        if not np.all(eo_is_valid(base)) or not eo_is_valid(p):
-            return np.nan
-        else:
-            return np.power(base, float(p))
+    def exec_xar(self):
+        pass
 
     @staticmethod
     def exec_da(self):
@@ -321,16 +466,18 @@ class eoPower(object):
 
 @process
 def eo_mean():
-    return eoMean()
+    return EOMean()
 
 
-class eoMean(object):
-    def __init__(self):
-        pass
+class EOMean(object):
+
+    @staticmethod
+    def exec_num(data, ignore_nodata=True, dimension=0):
+        return data
 
     @staticmethod
     def exec_np(data, ignore_nodata=True, dimension=0):
-        if is_empty(data):
+        if eo_is_empty(data):
             return np.nan
 
         if not ignore_nodata:
@@ -354,16 +501,18 @@ class eoMean(object):
 
 @process
 def eo_min():
-    return eoMin()
+    return EOMin()
 
 
-class eoMin(object):
-    def __init__(self):
-        pass
+class EOMin(object):
+
+    @staticmethod
+    def exec_num(data, ignore_nodata=True, dimension=0):
+        return data
 
     @staticmethod
     def exec_np(data, ignore_nodata=True, dimension=0):
-        if is_empty(data):
+        if eo_is_empty(data):
             return np.nan
 
         if not ignore_nodata:
@@ -387,16 +536,18 @@ class eoMin(object):
 
 @process
 def eo_max():
-    return eoMax()
+    return EOMax()
 
 
-class eoMax(object):
-    def __init__(self):
-        pass
+class EOMax(object):
+
+    @staticmethod
+    def exec_num(data, ignore_nodata=True, dimension=0):
+        return data
 
     @staticmethod
     def exec_np(data, ignore_nodata=True, dimension=0):
-        if is_empty(data):
+        if eo_is_empty(data):
             return np.nan
 
         if not ignore_nodata:
@@ -420,16 +571,18 @@ class eoMax(object):
 
 @process
 def eo_median():
-    return eoMedian()
+    return EOMedian()
 
 
-class eoMedian(object):
-    def __init__(self):
-        pass
+class EOMedian(object):
+
+    @staticmethod
+    def exec_num(data, ignore_nodata=True, dimension=0):
+        return data
 
     @staticmethod
     def exec_np(data, ignore_nodata=True, dimension=0):
-        if is_empty(data):
+        if eo_is_empty(data):
             return np.nan
 
         if not ignore_nodata:
@@ -453,16 +606,18 @@ class eoMedian(object):
 
 @process
 def eo_sd():
-    return eoSd()
+    return EOSd()
 
 
-class eoSd(object):
-    def __init__(self):
-        pass
+class EOSd(object):
+
+    @staticmethod
+    def exec_num(data, ignore_nodata=True, dimension=0):
+        return data
 
     @staticmethod
     def exec_np(data, ignore_nodata=True, dimension=0):
-        if is_empty(data):
+        if eo_is_empty(data):
             return np.nan
 
         if not ignore_nodata:
@@ -486,16 +641,18 @@ class eoSd(object):
 
 @process
 def eo_variance():
-    return eoVariance()
+    return EOVariance()
 
 
-class eoVariance(object):
-    def __init__(self):
-        pass
+class EOVariance(object):
+
+    @staticmethod
+    def exec_num(data, ignore_nodata=True, dimension=0):
+        return data
 
     @staticmethod
     def exec_np(data, ignore_nodata=True, dimension=0):
-        if is_empty(data):
+        if eo_is_empty(data):
             return np.nan
 
         if not ignore_nodata:
@@ -512,6 +669,7 @@ class eoVariance(object):
     def exec_da(self):
         pass
 
+
 ########################################################################################################################
 # Extrema Process
 ########################################################################################################################
@@ -522,12 +680,10 @@ def eo_extrema():
 
 
 class EOExtrema(object):
-    def __init__(self):
-        pass
 
     @staticmethod
-    def exec_num():
-        pass
+    def exec_num(data, dimension=0, ignore_nodata=True):
+        return [data, data]
 
     @staticmethod
     def exec_np(data, dimension=0, ignore_nodata=True):
@@ -548,8 +704,8 @@ class EOExtrema(object):
         list of numpy arrays
             Minimum and maximum value.
         """
-        min_val = eo_min(data, axis=dimension, ignore_nodata=ignore_nodata)
-        max_val = eo_max(data, axis=dimension, ignore_nodata=ignore_nodata)
+        min_val = eo_min(data, dimension=dimension, ignore_nodata=ignore_nodata)
+        max_val = eo_max(data, dimension=dimension, ignore_nodata=ignore_nodata)
 
         return [min_val, max_val]
 
@@ -569,28 +725,69 @@ class EOExtrema(object):
 
 @process
 def eo_quantiles():
-    return eoQuantiles()
+    return EOQuantiles()
 
 
-class eoQuantiles(object):
-    def __init__(self):
-        pass
+class EOQuantiles(object):
 
     @staticmethod
-    def exec_np(data, ignore_nodata=True, dimension=0, probabilities=None, q=None):
-        if (probabilities is not None) and (q is not None):
-            raise QuantilesParameterConflict()
+    def exec_num(data, ignore_nodata=True, dimension=0, probabilities=None, q=None):
+        EOQuantiles()._check_input(probabilities=probabilities, q=q)
 
         if probabilities is not None:
-            if is_empty(data):
+            probabilities = list(np.array(probabilities) * 100.)
+        elif q is not None:
+            probabilities = list(np.arange(0, 100, 100. / q))[1:]
+
+        return [data]*len(probabilities)
+
+    @staticmethod
+    def exec_np(data, dimension=0, probabilities=None, q=None, ignore_nodata=True):
+        """
+        Calculates quantiles, which are cut points dividing the range of a probability distribution into either
+        intervals corresponding to the given probabilities 'probabilities' or (nearly) equal-sized intervals
+        (q-quantiles based on the parameter 'q'). Either the parameter 'probabilities' or 'q' must be specified,
+        otherwise the 'QuantilesParameterMissing' exception is thrown. If both parameters are set the
+        'QuantilesParameterConflict' exception is thrown.
+
+
+        Parameters
+        ----------
+        data: np.array
+            An array of numbers.
+        dimension: int, optional
+            Dimension/axis of interest (0 is default).
+        probabilities: list, optional
+            A list of probabilities to calculate quantiles for. The probabilities must be between 0 and 1.
+        q: int, optional
+            A number of intervals to calculate quantiles for. Calculates q-quantiles with (nearly) equal-sized intervals.
+        ignore_nodata: bool, optional
+            Specifies if np.nan values are ignored or not (True is default).
+
+        Returns
+        -------
+        list of numpy arrays
+            An array with the computed quantiles. The list has either as many elements as the given list of
+            probabilities had or 'q'-1 elements. If the input array is empty the resulting array is filled with as
+            many np.nan values as required according to the list above.
+
+        Raises
+        ------
+        QuantilesParameterMissing
+            If both parameters 'probabilities' and 'q' are None.
+        QuantilesParameterConflict
+            If both parameters 'probabilities' and 'q' are set.
+        """
+        EOQuantiles()._check_input(probabilities=probabilities, q=q)
+
+        if probabilities is not None:
+            if eo_is_empty(data):
                 return [np.nan] * len(probabilities)
             probabilities = list(np.array(probabilities) * 100.)
         elif q is not None:
             probabilities = list(np.arange(0, 100, 100. / q))[1:]
-            if is_empty(data):
+            if eo_is_empty(data):
                 return [np.nan] * len(probabilities)
-        else:
-            raise QuantilesParameterMissing()
 
         if not ignore_nodata:
             return np.percentile(data, probabilities, axis=dimension)
@@ -599,24 +796,29 @@ class eoQuantiles(object):
 
     @staticmethod
     def exec_xar(data, ignore_nodata=True, dimension=0, probabilities=None, q=None):
-        if (probabilities is not None) and (q is not None):
-            raise QuantilesParameterConflict()
+        EOQuantiles()._check_input(probabilities=probabilities, q=q)
 
         if probabilities is not None:
-            if is_empty(data):
+            if eo_is_empty(data):
                 return [np.nan] * len(probabilities)
         elif q is not None:
             probabilities = list(np.arange(0, 1, 1./q))[1:]
-            if is_empty(data):
+            if eo_is_empty(data):
                 return [np.nan] * len(probabilities)
-        else:
-            raise QuantilesParameterMissing()
 
         return data.quantile(np.array(probabilities), dim=dimension, skipna=~ignore_nodata)
 
     @staticmethod
     def exec_da(self):
         pass
+
+    @staticmethod
+    def _check_input(probabilities=None, q=None):
+        if (probabilities is not None) and (q is not None):
+            raise QuantilesParameterConflict()
+
+        if probabilities is None and q is None:
+            raise QuantilesParameterMissing()
 
 
 ########################################################################################################################
@@ -625,30 +827,52 @@ class eoQuantiles(object):
 
 @process
 def eo_cummax():
-    return eoCummax()
+    return EOCummax()
 
 
-class eoCummax(object):
-    def __init__(self):
-        pass
+class EOCummax(object):
+
+    @staticmethod
+    def exec_num(data, ignore_nodata=True, dimension=0):
+        return data
 
     @staticmethod
     def exec_np(data, ignore_nodata=True, dimension=0):
-        if is_empty(data):
+        """
+        Finds cumulative maxima of an array of numbers. Every computed element is equal to the bigger one between
+        current element and the previously computed element. The returned array and the input array have always the
+        same length. By default, no-data values are skipped, but stay in the result. Setting the 'ignore_nodata' flag
+        to True makes that once a np.nan value is reached all following elements are set to np.nan in the result.
+
+        Parameters
+        ----------
+        data: np.array
+            An array of numbers.
+        ignore_nodata: bool, optional
+            Specifies if np.nan values are ignored or not (True is default).
+        dimension: int, optional
+            Dimension/axis of interest (0 is default).
+
+        Returns
+        -------
+        np.array
+            An array with the computed cumulative maxima.
+        """
+        if eo_is_empty(data):
             return np.nan
 
         if not ignore_nodata:
             return np.maximum.accumulate(data, axis=dimension)
         else:
-            data = np.array(data)
             nan_idxs = np.isnan(data)
             data[nan_idxs] = np.nanmin(data)
             data_cummax = np.maximum.accumulate(data, axis=dimension).astype(float)
-            data_cummax[nan_idxs] = np.nan
+            data_cummax[nan_idxs] = np.nan  # fill in the old np.nan values again
+            return data_cummax
 
     @staticmethod
     def exec_xar(data, ignore_nodata=True, dimension=0):
-        if is_empty(data):
+        if eo_is_empty(data):
             return np.nan
 
         if not ignore_nodata:
@@ -659,6 +883,7 @@ class eoCummax(object):
             data[nan_idxs] = np.nanmin(data)
             data_cummax = np.maximum.accumulate(data, axis=dimension).astype(float)
             data_cummax[nan_idxs] = np.nan
+            return data_cummax
 
     @staticmethod
     def exec_da(self):
@@ -671,31 +896,52 @@ class eoCummax(object):
 
 @process
 def eo_cummin():
-    return eoCummin()
+    return EOCummin()
 
 
-class eoCummin(object):
-    def __init__(self):
-        pass
+class EOCummin(object):
+
+    @staticmethod
+    def exec_num(data, ignore_nodata=True, dimension=0):
+        return data
 
     @staticmethod
     def exec_np(data, ignore_nodata=True, dimension=0):
-        if is_empty(data):
+        """
+        Finds cumulative minima of an array of numbers. Every computed element is equal to the smaller one between
+        current element and the previously computed element. The returned array and the input array have always the
+        same length. By default, no-data values are skipped, but stay in the result. Setting the 'ignore_nodata' flag
+        to True makes that once a np.nan value is reached all following elements are set to np.nan in the result.
+
+        Parameters
+        ----------
+        data: np.array
+            An array of numbers.
+        ignore_nodata: bool, optional
+            Specifies if np.nan values are ignored or not (True is default).
+        dimension: int, optional
+            Dimension/axis of interest (0 is default).
+
+        Returns
+        -------
+        np.array
+            An array with the computed cumulative minima.
+        """
+        if eo_is_empty(data):
             return np.nan
 
         if not ignore_nodata:
             return np.minimum.accumulate(data, axis=dimension)
         else:
-            data = np.array(data)
             nan_idxs = np.isnan(data)
             data[nan_idxs] = np.nanmax(data)
             data_cummin = np.minimum.accumulate(data, axis=dimension).astype(float)
-            data_cummin[nan_idxs] = np.nan
+            data_cummin[nan_idxs] = np.nan  # fill in the old np.nan values again
             return data_cummin
 
     @staticmethod
     def exec_xar(data, ignore_nodata=True, dimension=0):
-        if is_empty(data):
+        if eo_is_empty(data):
             return np.nan
 
         if not ignore_nodata:
@@ -719,30 +965,51 @@ class eoCummin(object):
 
 @process
 def eo_cumproduct():
-    return eoCumproduct()
+    return EOCumproduct()
 
 
-class eoCumproduct(object):
-    def __init__(self):
-        pass
+class EOCumproduct(object):
+
+    @staticmethod
+    def exec_num(data, ignore_nodata=True, dimension=0):
+        return data
 
     @staticmethod
     def exec_np(data, ignore_nodata=True, dimension=0):
-        if is_empty(data):
+        """
+        Computes cumulative products of an array of numbers. Every computed element is equal to the product of
+        current element and the previously computed element. The returned array and the input array have always the
+        same length. By default, no-data values are skipped, but stay in the result. Setting the 'ignore_nodata' flag
+        to True makes that once a np.nan value is reached all following elements are set to np.nan in the result.
+
+        Parameters
+        ----------
+        data: np.array
+            An array of numbers.
+        ignore_nodata: bool, optional
+            Specifies if np.nan values are ignored or not (True is default).
+        dimension: int, optional
+            Dimension/axis of interest (0 is default).
+
+        Returns
+        -------
+        np.array
+            An array with the computed cumulative products.
+        """
+        if eo_is_empty(data):
             return np.nan
 
         if not ignore_nodata:
             return np.cumprod(data, axis=dimension)
         else:
-            data = np.array(data)
             nan_idxs = np.isnan(data)
             data_cumprod = np.nancumprod(data, axis=dimension).astype(float)
-            data_cumprod[nan_idxs] = np.nan
+            data_cumprod[nan_idxs] = np.nan  # fill in the old np.nan values again
             return data_cumprod
 
     @staticmethod
     def exec_xar(data, ignore_nodata=True, dimension=0):
-        if is_empty(data):
+        if eo_is_empty(data):
             return np.nan
 
         return xar_addons.cumulatives.compound_prod(data, dim=dimension, skipna=~ignore_nodata)
@@ -758,30 +1025,51 @@ class eoCumproduct(object):
 
 @process
 def eo_cumsum():
-    return eoCumsum()
+    return EOCumsum()
 
 
-class eoCumsum(object):
-    def __init__(self):
-        pass
+class EOCumsum(object):
+
+    @staticmethod
+    def exec_num(data, ignore_nodata=True, dimension=0):
+        return data
 
     @staticmethod
     def exec_np(data, ignore_nodata=True, dimension=0):
-        if is_empty(data):
+        """
+        Computes cumulative sums of an array of numbers. Every computed element is equal to the sum of
+        current element and the previously computed element. The returned array and the input array have always the
+        same length. By default, no-data values are skipped, but stay in the result. Setting the 'ignore_nodata' flag
+        to True makes that once a np.nan value is reached all following elements are set to np.nan in the result.
+
+        Parameters
+        ----------
+        data: np.array
+            An array of numbers.
+        ignore_nodata: bool, optional
+            Specifies if np.nan values are ignored or not (True is default).
+        dimension: int, optional
+            Dimension/axis of interest (0 is default).
+
+        Returns
+        -------
+        np.array
+            An array with the computed cumulative sums.
+        """
+        if eo_is_empty(data):
             return np.nan
 
         if not ignore_nodata:
             return np.cumsum(data, axis=dimension)
         else:
-            data = np.array(data)
             nan_idxs = np.isnan(data)
             data_cumsum = np.nancumsum(data, axis=dimension).astype(float)
-            data_cumsum[nan_idxs] = np.nan
+            data_cumsum[nan_idxs] = np.nan  # fill in the old np.nan values again
             return data_cumsum
 
     @staticmethod
     def exec_xar(data, ignore_nodata=True, dimension=0):
-        if is_empty(data):
+        if eo_is_empty(data):
             return np.nan
 
         return xar_addons.cumulatives.compound_sum(data, dim=dimension, skipna=~ignore_nodata)
@@ -797,18 +1085,51 @@ class eoCumsum(object):
 
 @process
 def eo_sum():
-    return eoSum()
+    return EOSum()
 
 
-class eoSum(object):
-    def __init__(self):
-        pass
+class EOSum(object):
+
+    @staticmethod
+    def exec_num(data, ignore_nodata=True, dimension=0):
+        return data
 
     @staticmethod
     def exec_np(data, ignore_nodata=True, dimension=0, values_add=None):
+        """
+        Sums up all elements in a sequential array of numbers and returns the computed sum.
+        By default no-data values are ignored. Setting 'ignore_nodata' to False considers no-data values so that np.nan
+        is returned if any element is such a value.
+
+        Parameters
+        ----------
+        data: np.array
+            An array of numbers.
+        ignore_nodata: bool, optional
+            Specifies if np.nan values are ignored or not (True is default).
+        dimension: int, optional
+            Dimension/axis of interest (0 is default).
+        values_add: list, optional
+            Offers to add additional elements to the computed sum.
+
+        Returns
+        -------
+        np.array
+            The computed sum of the sequence of numbers.
+
+        Raises
+        ------
+        SummandMissing
+            Is thrown when less than two values are given.
+        """
         if not values_add:
-            values_add = []
-        number_elems = eo_count(data, axis=dimension, expression=True) + len(values_add)
+            values_add = np.array([])
+            n = 0
+        else:
+            values_add = np.array(values_add)
+            n = values_add.shape[dimension]
+
+        number_elems = eo_count(data, dimension=dimension, expression=True) + n
 
         if number_elems < 2:
             raise SummandMissing
@@ -836,26 +1157,63 @@ class eoSum(object):
 
 @process
 def eo_subtract():
-    return eoSubtract()
+    return EOSubtract()
 
 
-class eoSubtract(object):
-    def __init__(self):
-        pass
+class EOSubtract(object):
+
+    @staticmethod
+    def exec_num(data, ignore_nodata=True, dimension=0):
+        return data
 
     @staticmethod
     def exec_np(data, ignore_nodata=True, dimension=0, values_sub=None):
+        """
+        Takes the first element of a sequential array of numbers and subtracts all other elements from it.
+        By default no-data values are ignored. Setting 'ignore_nodata' to False considers no-data values so that np.nan
+        is returned if any element is such a value.
+
+        Parameters
+        ----------
+        data: np.array
+            An array of numbers.
+        ignore_nodata: bool, optional
+            Specifies if np.nan values are ignored or not (True is default).
+        dimension: int, optional
+            Dimension/axis of interest (0 is default).
+        values_sub: list, optional
+            Offers to subtract additional elements to the computed subtraction.
+
+        Returns
+        -------
+        np.array
+            The computed subtraction of the sequence of numbers.
+
+        Raises
+        ------
+        SubtrahendMissing
+            Is thrown when less than two values are given.
+        """
         if not values_sub:
-            values_sub = []
-        number_elems = eo_count(data, axis=dimension, expression=True) + len(values_sub)
+            values_sub = np.array([])
+            n = 0
+        else:
+            values_sub = np.array(values_sub)
+            n = values_sub.shape[dimension]
+
+        number_elems = eo_count(data, dimension=dimension, expression=True) + n
         if number_elems < 2:
             raise SubtrahendMissing
 
+        # change the sign of the first value along the given dimension to enable the following subtract operation
+        string_select = build_multi_dim_index("0", data.shape, dimension)  # create index string
+        exec("data[{}] *= -1".format(string_select))
+
         if not ignore_nodata:
-            subtrahend = np.sum(-np.array(values_sub))
+            subtrahend = np.sum(-values_sub)
             return np.sum(-data, axis=dimension) - subtrahend
         else:
-            subtrahend = np.nansum(-np.array(values_sub))
+            subtrahend = np.nansum(-values_sub)
             return np.nansum(-data, axis=dimension) - subtrahend
 
     @staticmethod
@@ -874,22 +1232,55 @@ class eoSubtract(object):
 
 @process
 def eo_multiply():
-    return eoMultiply()
+    return EOMultiply()
+
 
 # TODO: better implementation?
-class eoMultiply(object):
-    def __init__(self):
-        pass
+class EOMultiply(object):
+
+    @staticmethod
+    def exec_num(data, ignore_nodata=True, dimension=0):
+        return data
 
     @staticmethod
     def exec_np(data, ignore_nodata=True, dimension=0, values_mul=None):
+        """
+        Multiplies all elements in a sequential array of numbers and returns the computed product.
+        By default no-data values are ignored. Setting 'ignore_nodata' to False considers no-data values so that np.nan
+        is returned if any element is such a value.
+
+        Parameters
+        ----------
+        data: np.array
+            An array of numbers.
+        ignore_nodata: bool, optional
+            Specifies if np.nan values are ignored or not (True is default).
+        dimension: int, optional
+            Dimension/axis of interest (0 is default).
+        values_sub: list, optional
+            Offers to subtract additional elements to the computed subtraction.
+
+        Returns
+        -------
+        np.array
+            The computed product of the sequence of numbers.
+
+        Raises
+        ------
+        MultiplicandMissing
+            Is thrown when less than two values are given.
+        """
         if not values_mul:
-            values_mul = []
-        number_elems = eo_count(data, axis=dimension, expression=True) + len(values_mul)
+            values_mul = np.array([])
+            n = 0
+        else:
+            values_mul = np.array(values_mul)
+            n = values_mul.shape[dimension]
+
+        number_elems = eo_count(data, dimension=dimension, expression=True) + n
         if number_elems < 2:
             raise MultiplicandMissing
 
-        values_mul = np.array(values_mul)
         if not ignore_nodata:
             multiplicand = functools.reduce(operator.mul, values_mul, 1)
             return np.apply_along_axis(lambda data: functools.reduce(operator.mul, data, 1), dimension, data) * multiplicand
@@ -920,35 +1311,64 @@ def eo_product(data, axis=0, ignore_nodata=True):
 
 @process
 def eo_divide():
-    return eoDivide()
+    return EODivide()
 
 
 # TODO: better implementation?
-class eoDivide(object):
-    def __init__(self):
-        pass
+class EODivide(object):
+    @staticmethod
+    def exec_num(data, ignore_nodata=True, dimension=0):
+        return data
 
     @staticmethod
     def exec_np(data, ignore_nodata=True, dimension=0, values_div=None):
+        """
+        Divides the first element in a sequential array of numbers by all other elements.
+        By default no-data values are ignored. Setting 'ignore_nodata' to False considers no-data values so that np.nan
+        is returned if any element is such a value.
+
+        Parameters
+        ----------
+        data: np.array
+            An array of numbers.
+        ignore_nodata: bool, optional
+            Specifies if np.nan values are ignored or not (True is default).
+        dimension: int, optional
+            Dimension/axis of interest (0 is default).
+        values_sub: list, optional
+            Offers to subtract additional elements to the computed subtraction.
+
+        Returns
+        -------
+        np.array
+            The computed ratio of the sequence of numbers.
+
+        Raises
+        ------
+        DivisorMissing
+            Is thrown when less than two values are given.
+        """
         if not values_div:
-            values_div = []
-        number_elems = eo_count(data, axis=dimension, expression=True) + len(values_div)
+            values_div = np.array([])
+            n = 0
+        else:
+            values_div = np.array(values_div)
+            n = values_div.shape[dimension]
+
+        number_elems = eo_count(data, dimension=dimension, expression=True) + n
         if number_elems < 2:
             raise DivisorMissing
 
-        values_div = np.array(values_div)
         if not ignore_nodata:
-            divisor = functools.reduce(operator.truediv, values_div, 1)
-            return np.apply_along_axis(lambda data: functools.reduce(operator.mul, data, 1), dimension,
-                                       data) / divisor
+            ratio = np.apply_along_axis(lambda data: functools.reduce(operator.truediv, data), dimension, data)
+            return functools.reduce(operator.truediv, values_div, ratio)
         else:
             data_nan_idxs = pd.isnull(data)
             values_nan_idxs = pd.isnull(values_div)
             data = data[~data_nan_idxs]
             values_div = values_div[~values_nan_idxs]
-            divisor = functools.reduce(operator.mul, values_div, 1)
-            return np.apply_along_axis(lambda data: functools.reduce(operator.mul, data, 1), dimension,
-                                       data) / divisor
+            ratio = np.apply_along_axis(lambda data: functools.reduce(operator.truediv, data), dimension, data)
+            return functools.reduce(operator.truediv, values_div, ratio)
 
     @staticmethod
     def exec_xar():
@@ -957,9 +1377,3 @@ class eoDivide(object):
     @staticmethod
     def exec_da():
         pass
-
-
-
-
-if __name__ == '__main__':
-    a = 0
