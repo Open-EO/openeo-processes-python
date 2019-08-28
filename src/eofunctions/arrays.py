@@ -31,7 +31,7 @@ class EOArrayElement(object):
         pass
 
     @staticmethod
-    def exec_np(data, index, return_nodata=False):
+    def exec_np(data, index, dimension=0, return_nodata=False):
         """
         Returns the element of 'data' corresponding to the given index.
 
@@ -60,11 +60,13 @@ class EOArrayElement(object):
             if not return_nodata:
                 raise IndexOutOfBounds()
             else:
-                element = np.nan
+                array_elem = np.nan
         else:
-            element = data[index]
+            dims = len(data.shape)
+            string_select = build_multi_dim_index("index", data.shape, dimension)  # create index string
+            array_elem = eval("data[{}]".format(string_select))  # select the data according to the index string
 
-        return element
+        return array_elem
 
     @staticmethod
     def exec_xar():
