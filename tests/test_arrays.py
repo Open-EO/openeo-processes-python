@@ -21,7 +21,22 @@ def test_array_element():
     assert eof.eo_array_element([9, 8, 7, 6, 5], index=2) == 7
     assert eof.eo_array_element(["A", "B", "C"], index=0) == "A"
     assert np.isnan(eof.eo_array_element([], index=0, return_nodata=True))
-
+    # multi-dim
+    test_array = np.empty((3, 2,2))
+    test_array[0, :,:] = np.array([[1, 2], [3, 4]])
+    test_array[1, :,:] = np.array([[1, 2], [3, 4]]) * 20
+    test_array[2, :,:] = np.array([[1, 2], [3, 4]]) * 500
+    array_i2_d0 = np.array([
+                            [500, 1000],
+                            [1500, 2000]
+                            ])
+    array_i0_d1 = np.array([
+                            [1, 2],
+                            [20, 40],
+                            [500, 1000]
+                            ])
+    assert np.sum(eof.eo_array_element(test_array, index=2, dimension=0) - array_i2_d0) == 0
+    assert np.sum(eof.eo_array_element(test_array, index=0, dimension=1) - array_i0_d1) == 0
 
 def test_count():
     assert eof.eo_count([]) == 0
@@ -75,12 +90,12 @@ def test_clip():
 
 
 if __name__ == "__main__":
-    test_array_contains()
+    #test_array_contains()
     test_array_element()
-    test_count()
-    test_first()
-    test_last()
-    test_order()
-    test_rearrange()
-    test_sort()
-    test_clip()
+    #test_count()
+    #test_first()
+    #test_last()
+    #test_order()
+    #test_rearrange()
+    #test_sort()
+    #test_clip()

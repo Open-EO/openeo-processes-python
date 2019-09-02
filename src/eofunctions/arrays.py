@@ -56,7 +56,7 @@ class EOArrayElement(object):
             If the element specified by the index cannot be found and 'return_nodata' is false.
 
         """
-        if index >= len(data):
+        if index >= data.shape[dimension]:
             if not return_nodata:
                 raise IndexOutOfBounds()
             else:
