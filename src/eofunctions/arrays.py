@@ -62,7 +62,6 @@ class EOArrayElement(object):
             else:
                 array_elem = np.nan
         else:
-            dims = len(data.shape)
             string_select = build_multi_dim_index("index", data.shape, dimension)  # create index string
             array_elem = eval("data[{}]".format(string_select))  # select the data according to the index string
 
