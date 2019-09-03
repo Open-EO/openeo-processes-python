@@ -31,7 +31,7 @@ class EOArrayElement(object):
         pass
 
     @staticmethod
-    def exec_np(data, index, dimension=0, return_nodata=False):
+    def exec_np(data, index=0, dimension=0, return_nodata=False):
         """
         Returns the element of 'data' corresponding to the given index.
 
