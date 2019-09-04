@@ -1095,7 +1095,7 @@ class EOSum(object):
         return data
 
     @staticmethod
-    def exec_np(data, ignore_nodata=True, dimension=0, values_add=None):
+    def exec_np(data, ignore_nodata=True, dimension=0, extra_values=None):
         """
         Sums up all elements in a sequential array of numbers and returns the computed sum.
         By default no-data values are ignored. Setting 'ignore_nodata' to False considers no-data values so that np.nan
@@ -1109,7 +1109,7 @@ class EOSum(object):
             Specifies if np.nan values are ignored or not (True is default).
         dimension: int, optional
             Dimension/axis of interest (0 is default).
-        values_add: list, optional
+        extra_values: list, optional
             Offers to add additional elements to the computed sum.
 
         Returns
@@ -1122,12 +1122,12 @@ class EOSum(object):
         SummandMissing
             Is thrown when less than two values are given.
         """
-        if not values_add:
-            values_add = np.array([])
+        if not extra_values:
+            extra_values = np.array([])
             n = 0
         else:
-            values_add = np.array(values_add)
-            n = values_add.shape[dimension]
+            extra_values = np.array(extra_values)
+            n = extra_values.shape[dimension]
 
         number_elems = eo_count(data, dimension=dimension, expression=True) + n
 
@@ -1135,10 +1135,10 @@ class EOSum(object):
             raise SummandMissing
 
         if not ignore_nodata:
-            summand = np.sum(values_add)
+            summand = np.sum(extra_values)
             return np.sum(data, axis=dimension) + summand
         else:
-            summand = np.nansum(values_add)
+            summand = np.nansum(extra_values)
             return np.nansum(data, axis=dimension) + summand
 
     @staticmethod
@@ -1167,7 +1167,7 @@ class EOSubtract(object):
         return data
 
     @staticmethod
-    def exec_np(data, ignore_nodata=True, dimension=0, values_sub=None):
+    def exec_np(data, ignore_nodata=True, dimension=0, extra_values=None):
         """
         Takes the first element of a sequential array of numbers and subtracts all other elements from it.
         By default no-data values are ignored. Setting 'ignore_nodata' to False considers no-data values so that np.nan
@@ -1181,7 +1181,7 @@ class EOSubtract(object):
             Specifies if np.nan values are ignored or not (True is default).
         dimension: int, optional
             Dimension/axis of interest (0 is default).
-        values_sub: list, optional
+        extra_values: list, optional
             Offers to subtract additional elements to the computed subtraction.
 
         Returns
@@ -1194,12 +1194,12 @@ class EOSubtract(object):
         SubtrahendMissing
             Is thrown when less than two values are given.
         """
-        if not values_sub:
-            values_sub = np.array([])
+        if not extra_values:
+            extra_values = np.array([])
             n = 0
         else:
-            values_sub = np.array(values_sub)
-            n = values_sub.shape[dimension]
+            extra_values = np.array(extra_values)
+            n = extra_values.shape[dimension]
 
         number_elems = eo_count(data, dimension=dimension, expression=True) + n
         if number_elems < 2:
@@ -1210,10 +1210,10 @@ class EOSubtract(object):
         exec("data[{}] *= -1".format(string_select))
 
         if not ignore_nodata:
-            subtrahend = np.sum(-values_sub)
+            subtrahend = np.sum(-extra_values)
             return np.sum(-data, axis=dimension) - subtrahend
         else:
-            subtrahend = np.nansum(-values_sub)
+            subtrahend = np.nansum(-extra_values)
             return np.nansum(-data, axis=dimension) - subtrahend
 
     @staticmethod
@@ -1243,7 +1243,7 @@ class EOMultiply(object):
         return data
 
     @staticmethod
-    def exec_np(data, ignore_nodata=True, dimension=0, values_mul=None):
+    def exec_np(data, ignore_nodata=True, dimension=0, extra_values=None):
         """
         Multiplies all elements in a sequential array of numbers and returns the computed product.
         By default no-data values are ignored. Setting 'ignore_nodata' to False considers no-data values so that np.nan
@@ -1257,7 +1257,7 @@ class EOMultiply(object):
             Specifies if np.nan values are ignored or not (True is default).
         dimension: int, optional
             Dimension/axis of interest (0 is default).
-        values_sub: list, optional
+        extra_values: list, optional
             Offers to subtract additional elements to the computed subtraction.
 
         Returns
@@ -1270,26 +1270,26 @@ class EOMultiply(object):
         MultiplicandMissing
             Is thrown when less than two values are given.
         """
-        if not values_mul:
-            values_mul = np.array([])
+        if not extra_values:
+            extra_values = np.array([])
             n = 0
         else:
-            values_mul = np.array(values_mul)
-            n = values_mul.shape[dimension]
+            extra_values = np.array(extra_values)
+            n = extra_values.shape[dimension]
 
         number_elems = eo_count(data, dimension=dimension, expression=True) + n
         if number_elems < 2:
             raise MultiplicandMissing
 
         if not ignore_nodata:
-            multiplicand = functools.reduce(operator.mul, values_mul, 1)
+            multiplicand = functools.reduce(operator.mul, extra_values, 1)
             return np.apply_along_axis(lambda data: functools.reduce(operator.mul, data, 1), dimension, data) * multiplicand
         else:
             data_nan_idxs = pd.isnull(data)
-            values_nan_idxs = pd.isnull(values_mul)
+            values_nan_idxs = pd.isnull(extra_values)
             data = data[~data_nan_idxs]
-            values_mul = values_mul[~values_nan_idxs]
-            multiplicand = functools.reduce(operator.mul, values_mul, 1)
+            extra_values = extra_values[~values_nan_idxs]
+            multiplicand = functools.reduce(operator.mul, extra_values, 1)
             return np.apply_along_axis(lambda data: functools.reduce(operator.mul, data, 1), dimension, data) * multiplicand
 
     @staticmethod
@@ -1321,7 +1321,7 @@ class EODivide(object):
         return data
 
     @staticmethod
-    def exec_np(data, ignore_nodata=True, dimension=0, values_div=None):
+    def exec_np(data, ignore_nodata=True, dimension=0, extra_values=None):
         """
         Divides the first element in a sequential array of numbers by all other elements.
         By default no-data values are ignored. Setting 'ignore_nodata' to False considers no-data values so that np.nan
@@ -1335,7 +1335,7 @@ class EODivide(object):
             Specifies if np.nan values are ignored or not (True is default).
         dimension: int, optional
             Dimension/axis of interest (0 is default).
-        values_sub: list, optional
+        extra_values: list, optional
             Offers to subtract additional elements to the computed subtraction.
 
         Returns
@@ -1348,12 +1348,12 @@ class EODivide(object):
         DivisorMissing
             Is thrown when less than two values are given.
         """
-        if not values_div:
-            values_div = np.array([])
+        if not extra_values:
+            extra_values = np.array([])
             n = 0
         else:
-            values_div = np.array(values_div)
-            n = values_div.shape[dimension]
+            extra_values = np.array(extra_values)
+            n = extra_values.shape[dimension]
 
         number_elems = eo_count(data, dimension=dimension, expression=True) + n
         if number_elems < 2:
@@ -1361,14 +1361,14 @@ class EODivide(object):
 
         if not ignore_nodata:
             ratio = np.apply_along_axis(lambda data: functools.reduce(operator.truediv, data), dimension, data)
-            return functools.reduce(operator.truediv, values_div, ratio)
+            return functools.reduce(operator.truediv, extra_values, ratio)
         else:
             data_nan_idxs = pd.isnull(data)
-            values_nan_idxs = pd.isnull(values_div)
+            values_nan_idxs = pd.isnull(extra_values)
             data = data[~data_nan_idxs]
-            values_div = values_div[~values_nan_idxs]
+            extra_values = extra_values[~values_nan_idxs]
             ratio = np.apply_along_axis(lambda data: functools.reduce(operator.truediv, data), dimension, data)
-            return functools.reduce(operator.truediv, values_div, ratio)
+            return functools.reduce(operator.truediv, extra_values, ratio)
 
     @staticmethod
     def exec_xar():
