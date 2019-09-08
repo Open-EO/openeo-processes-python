@@ -1167,7 +1167,7 @@ class EOSubtract(object):
         return data
 
     @staticmethod
-    def exec_np(data, ignore_nodata=True, dimension=0, extra_values=None):
+    def exec_np(data, ignore_nodata=True, dimension=0, extra_values=None, extra_idxs=None):
         """
         Takes the first element of a sequential array of numbers and subtracts all other elements from it.
         By default no-data values are ignored. Setting 'ignore_nodata' to False considers no-data values so that np.nan
@@ -1194,27 +1194,22 @@ class EOSubtract(object):
         SubtrahendMissing
             Is thrown when less than two values are given.
         """
-        if not extra_values:
-            extra_values = np.array([])
-            n = 0
-        else:
-            extra_values = np.array(extra_values)
-            n = extra_values.shape[dimension]
 
+        n = 0 if not extra_values else len(extra_values)
         number_elems = eo_count(data, dimension=dimension, expression=True) + n
         if number_elems < 2:
             raise SubtrahendMissing
 
-        # change the sign of the first value along the given dimension to enable the following subtract operation
-        string_select = build_multi_dim_index("0", data.shape, dimension)  # create index string
-        exec("data[{}] *= -1".format(string_select))
+        check_extra_entries(extra_values, extra_idxs)
+        new_data = stack_array_and_extra_values(data, extra_values, extra_idxs, dimension=dimension)
+
+        def ignore_nodata_sub(data):
+            return ignore_nodata_fun(data, operator.sub)
 
         if not ignore_nodata:
-            subtrahend = np.sum(-extra_values)
-            return np.sum(-data, axis=dimension) - subtrahend
+            return np.apply_along_axis(lambda x: functools.reduce(operator.sub, x), dimension, new_data)
         else:
-            subtrahend = np.nansum(-extra_values)
-            return np.nansum(-data, axis=dimension) - subtrahend
+            return np.apply_along_axis(ignore_nodata_sub, dimension, new_data)
 
     @staticmethod
     def exec_xar(data, ignore_nodata=True, dimension=0):
@@ -1287,7 +1282,7 @@ class EOMultiply(object):
         else:
             data_nan_idxs = pd.isnull(data)
             values_nan_idxs = pd.isnull(extra_values)
-            data = data[~data_nan_idxs]
+            data[data_nan_idxs] = 1.
             extra_values = extra_values[~values_nan_idxs]
             multiplicand = functools.reduce(operator.mul, extra_values, 1)
             return np.apply_along_axis(lambda data: functools.reduce(operator.mul, data, 1), dimension, data) * multiplicand
@@ -1321,7 +1316,7 @@ class EODivide(object):
         return data
 
     @staticmethod
-    def exec_np(data, ignore_nodata=True, dimension=0, extra_values=None):
+    def exec_np(data, ignore_nodata=True, dimension=0, extra_values=None, extra_idxs=None):
         """
         Divides the first element in a sequential array of numbers by all other elements.
         By default no-data values are ignored. Setting 'ignore_nodata' to False considers no-data values so that np.nan
@@ -1359,16 +1354,16 @@ class EODivide(object):
         if number_elems < 2:
             raise DivisorMissing
 
+        check_extra_entries(extra_values, extra_idxs)
+        new_data = stack_array_and_extra_values(data, extra_values, extra_idxs, dimension=dimension)
+
+        def ignore_nodata_div(data):
+            return ignore_nodata_fun(data, operator.truediv)
+
         if not ignore_nodata:
-            ratio = np.apply_along_axis(lambda data: functools.reduce(operator.truediv, data), dimension, data)
-            return functools.reduce(operator.truediv, extra_values, ratio)
+            return np.apply_along_axis(lambda x: functools.reduce(operator.truediv, x), dimension, new_data)
         else:
-            data_nan_idxs = pd.isnull(data)
-            values_nan_idxs = pd.isnull(extra_values)
-            data = data[~data_nan_idxs]
-            extra_values = extra_values[~values_nan_idxs]
-            ratio = np.apply_along_axis(lambda data: functools.reduce(operator.truediv, data), dimension, data)
-            return functools.reduce(operator.truediv, extra_values, ratio)
+            return np.apply_along_axis(ignore_nodata_div, dimension, new_data)
 
     @staticmethod
     def exec_xar():
@@ -1377,3 +1372,49 @@ class EODivide(object):
     @staticmethod
     def exec_da():
         pass
+
+
+def check_extra_entries(extra_values, extra_idxs):
+    if extra_values:  # TODO
+        if not extra_idxs:
+            pass
+        elif len(extra_idxs) != len(extra_values):
+            pass
+
+
+def stack_array_and_extra_values(array, extra_values, extra_idxs, dimension=0):
+
+    if len(extra_values) == 0:
+        return array
+
+    n = array.shape[dimension] + len(extra_values)
+    new_shape = list(array.shape)
+    new_shape[dimension] = n
+    new_array = np.zeros(tuple(new_shape))
+
+    array_counter = 0
+    for i in range(n):
+        new_array_select = build_multi_dim_index(str(i), new_array.shape, dimension)  # create index string
+        if i in extra_idxs:
+            extra_value = extra_values[extra_idxs.index(i)]
+            exec("new_array[{}] = extra_value".format(new_array_select))
+        else:
+            array_select = build_multi_dim_index(str(array_counter), array.shape, dimension)  # create index string
+            exec("new_array[{}] = array[{}]".format(new_array_select, array_select))
+            array_counter += 1
+
+    return new_array
+
+
+def ignore_nodata_fun(data, fun):
+    data_nan_idxs = pd.isnull(data)
+    data_masked = data[~data_nan_idxs]
+    if len(data_masked) == 0:
+        return [np.nan]
+    else:
+        return functools.reduce(fun, data_masked)
+
+if __name__ == '__main__':
+    A = np.array([[np.nan, 1], [1, 1]])
+    B = np.array([A, A])
+    eo_divide(B)
