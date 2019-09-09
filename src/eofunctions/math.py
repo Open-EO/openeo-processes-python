@@ -1122,12 +1122,7 @@ class EOSum(object):
         SummandMissing
             Is thrown when less than two values are given.
         """
-        if not extra_values:
-            extra_values = np.array([])
-            n = 0
-        else:
-            extra_values = np.array(extra_values)
-            n = extra_values.shape[dimension]
+        extra_values, _, n = check_extra_entries(extra_values, dimension)
 
         number_elems = eo_count(data, dimension=dimension, expression=True) + n
 
@@ -1195,12 +1190,11 @@ class EOSubtract(object):
             Is thrown when less than two values are given.
         """
 
-        n = 0 if not extra_values else len(extra_values)
+        extra_values, extra_idxs, n = check_extra_entries(extra_values, dimension, extra_idxs)
         number_elems = eo_count(data, dimension=dimension, expression=True) + n
         if number_elems < 2:
             raise SubtrahendMissing
 
-        check_extra_entries(extra_values, extra_idxs)
         new_data = stack_array_and_extra_values(data, extra_values, extra_idxs, dimension=dimension)
 
         def ignore_nodata_sub(data):
@@ -1265,12 +1259,7 @@ class EOMultiply(object):
         MultiplicandMissing
             Is thrown when less than two values are given.
         """
-        if not extra_values:
-            extra_values = np.array([])
-            n = 0
-        else:
-            extra_values = np.array(extra_values)
-            n = extra_values.shape[dimension]
+        extra_values, _, n = check_extra_entries(extra_values, dimension)
 
         number_elems = eo_count(data, dimension=dimension, expression=True) + n
         if number_elems < 2:
@@ -1343,18 +1332,12 @@ class EODivide(object):
         DivisorMissing
             Is thrown when less than two values are given.
         """
-        if not extra_values:
-            extra_values = np.array([])
-            n = 0
-        else:
-            extra_values = np.array(extra_values)
-            n = extra_values.shape[dimension]
+        extra_values, extra_idxs, n = check_extra_entries(extra_values, dimension, extra_idxs)
 
         number_elems = eo_count(data, dimension=dimension, expression=True) + n
         if number_elems < 2:
             raise DivisorMissing
 
-        check_extra_entries(extra_values, extra_idxs)
         new_data = stack_array_and_extra_values(data, extra_values, extra_idxs, dimension=dimension)
 
         def ignore_nodata_div(data):
@@ -1374,12 +1357,18 @@ class EODivide(object):
         pass
 
 
-def check_extra_entries(extra_values, extra_idxs):
-    if extra_values:  # TODO
+def check_extra_entries(extra_values, dimension, extra_idxs=None):
+    if not extra_values:
+        extra_values = np.array([])
+        extra_idxs = []
+        n = 0
+    else:
+        extra_values = np.array(extra_values)
+        n = extra_values.shape[dimension]
         if not extra_idxs:
-            pass
-        elif len(extra_idxs) != len(extra_values):
-            pass
+            extra_idxs = np.arange(len(extra_values)).tolist()
+    
+    return extra_values, extra_idxs, n
 
 
 def stack_array_and_extra_values(array, extra_values, extra_idxs, dimension=0):
