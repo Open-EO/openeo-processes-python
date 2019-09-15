@@ -1195,15 +1195,22 @@ class EOSubtract(object):
         if number_elems < 2:
             raise SubtrahendMissing
 
-        new_data = stack_array_and_extra_values(data, extra_values, extra_idxs, dimension=dimension)
+        new_data = list(stack_array_and_extra_values(data, extra_values, extra_idxs, dimension=dimension))
 
-        def ignore_nodata_sub(data):
-            return ignore_nodata_fun(data, operator.sub)
+        result = new_data[0]
+        for i in range(1, len(new_data)):
+            if not ignore_nodata:
+                # completely ignore nodata values
+                result = np.subtract(result, new_data[i])
+            else:
+                # if there are nan values in the (previous) result they are replaced with the non nan-values of the next layer
+                nan_idxs = np.isnan(result) & ~np.isnan(new_data[i])
+                result[nan_idxs] = new_data[i][nan_idxs]
+                # old nan values of the next layer are replaced with a zero
+                new_data[i][nan_idxs] = 0.
+                result = np.subtract(result, new_data[i])
 
-        if not ignore_nodata:
-            return np.apply_along_axis(lambda x: functools.reduce(operator.sub, x), dimension, new_data)
-        else:
-            return np.apply_along_axis(ignore_nodata_sub, dimension, new_data)
+        return result
 
     @staticmethod
     def exec_xar(data, ignore_nodata=True, dimension=0):
@@ -1265,16 +1272,18 @@ class EOMultiply(object):
         if number_elems < 2:
             raise MultiplicandMissing
 
-        if not ignore_nodata:
-            multiplicand = functools.reduce(operator.mul, extra_values, 1)
-            return np.apply_along_axis(lambda data: functools.reduce(operator.mul, data, 1), dimension, data) * multiplicand
-        else:
-            data_nan_idxs = pd.isnull(data)
-            values_nan_idxs = pd.isnull(extra_values)
-            data[data_nan_idxs] = 1.
-            extra_values = extra_values[~values_nan_idxs]
-            multiplicand = functools.reduce(operator.mul, extra_values, 1)
-            return np.apply_along_axis(lambda data: functools.reduce(operator.mul, data, 1), dimension, data) * multiplicand
+        new_data = stack_array_and_extra_values(data, extra_values, dimension=dimension)
+
+        if ignore_nodata:
+            new_data[np.isnan(new_data)] = 1.
+
+        new_data = list(new_data)
+
+        result = new_data[0]
+        for i in range(1, len(new_data)):
+            result = np.multiply(result, new_data[i])
+
+        return result
 
     @staticmethod
     def exec_xar(data, ignore_nodata=True, dimension=0):
@@ -1338,15 +1347,22 @@ class EODivide(object):
         if number_elems < 2:
             raise DivisorMissing
 
-        new_data = stack_array_and_extra_values(data, extra_values, extra_idxs, dimension=dimension)
+        new_data = list(stack_array_and_extra_values(data, extra_values, extra_idxs, dimension=dimension))
 
-        def ignore_nodata_div(data):
-            return ignore_nodata_fun(data, operator.truediv)
+        result = new_data[0]
+        for i in range(1, len(new_data)):
+            if not ignore_nodata:
+                # completely ignore nodata values
+                result = np.divide(result, new_data[i])
+            else:
+                # if there are nan values in the (previous) result they are replaced with the non nan-values of the next layer
+                nan_idxs = np.isnan(result) & ~np.isnan(new_data[i])
+                result[nan_idxs] = new_data[i][nan_idxs]
+                # old nan values of the next layer are replaced with a one
+                new_data[i][nan_idxs] = 1.
+                result = np.divide(result, new_data[i])
 
-        if not ignore_nodata:
-            return np.apply_along_axis(lambda x: functools.reduce(operator.truediv, x), dimension, new_data)
-        else:
-            return np.apply_along_axis(ignore_nodata_div, dimension, new_data)
+        return result
 
     @staticmethod
     def exec_xar():
@@ -1357,29 +1373,37 @@ class EODivide(object):
         pass
 
 
-def check_extra_entries(extra_values, dimension, extra_idxs=None):
-    if not extra_values:
-        extra_values = np.array([])
-        extra_idxs = []
-        n = 0
-    else:
-        extra_values = np.array(extra_values)
-        n = extra_values.shape[dimension]
-        if not extra_idxs:
-            extra_idxs = np.arange(len(extra_values)).tolist()
-    
-    return extra_values, extra_idxs, n
+def list_array_and_extra_values(array, extra_values, extra_idxs, dimension=0):
+    if len(extra_values) == 0:
+        return list(array)
+
+    n = array.shape[dimension] + len(extra_values)
+    elems = []
+
+    array_counter = 0
+    for i in range(n):
+        if i in extra_idxs:
+            elems.append(extra_values[extra_idxs.index(i)])
+        else:
+            elems.append(array[array_counter])
+            array_counter += 1
+
+    return elems
 
 
-def stack_array_and_extra_values(array, extra_values, extra_idxs, dimension=0):
+def stack_array_and_extra_values(array, extra_values, extra_idxs=None, dimension=0):
 
     if len(extra_values) == 0:
         return array
 
-    n = array.shape[dimension] + len(extra_values)
+    n_array = array.shape[dimension]
+    n = n_array + len(extra_values)
     new_shape = list(array.shape)
     new_shape[dimension] = n
     new_array = np.zeros(tuple(new_shape))
+
+    if extra_idxs is None:
+        extra_idxs = list(range(n_array, n))
 
     array_counter = 0
     for i in range(n):
@@ -1395,6 +1419,20 @@ def stack_array_and_extra_values(array, extra_values, extra_idxs, dimension=0):
     return new_array
 
 
+def check_extra_entries(extra_values, dimension, extra_idxs=None):
+    if not extra_values:
+        extra_values = np.array([])
+        extra_idxs = []
+        n = 0
+    else:
+        extra_values = np.array(extra_values)
+        n = extra_values.shape[dimension]
+        if not extra_idxs:
+            extra_idxs = np.arange(len(extra_values)).tolist()
+
+    return extra_values, extra_idxs, n
+
+
 def ignore_nodata_fun(data, fun):
     data_nan_idxs = pd.isnull(data)
     data_masked = data[~data_nan_idxs]
@@ -1404,6 +1442,5 @@ def ignore_nodata_fun(data, fun):
         return functools.reduce(fun, data_masked)
 
 if __name__ == '__main__':
-    A = np.array([[np.nan, 1], [1, 1]])
-    B = np.array([A, A])
-    eo_divide(B)
+    A = np.ones((10, 10000, 10000))
+    B = eo_subtract(A, extra_values=[2])
