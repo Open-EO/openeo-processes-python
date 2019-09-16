@@ -1,6 +1,7 @@
 import sys
 import os
 sys.path.append(os.path.dirname(__file__))
+from copy import deepcopy
 import eofunctions as eof
 import numpy as np
 from utils_test import assert_list_items
@@ -266,23 +267,35 @@ def test_sum():
 
 
 def test_subtract():
+    assert eof.eo_subtract([5, 10], extra_values=[20]) == -25
     assert eof.eo_subtract([5, 10]) == -5
     assert eof.eo_subtract([-2, 4, -2]) == -4
     assert np.isnan(eof.eo_subtract([1, np.nan], ignore_nodata=False))
+    C = np.ones((2, 5, 5)) * 100
+    assert np.sum(eof.eo_subtract(deepcopy(C))) == 0
+    assert np.sum(eof.eo_subtract(deepcopy(C), extra_values=[1])) == -1 * (5 * 5)
+    assert np.sum(eof.eo_subtract(deepcopy(C), extra_values=[1], extra_idxs=[0])) == -199 * (5 * 5)
 
 
 def test_multiply():
     assert eof.eo_multiply([5, 0]) == 0
     assert eof.eo_multiply([-2, 4, 2.5]) == -20
     assert np.isnan(eof.eo_multiply([1, np.nan], ignore_nodata=False))
+    C = np.ones((2, 5, 5)) * 100
+    assert np.sum(eof.eo_multiply(C) - np.ones((5, 5)) * 10000) == 0
+    assert np.sum(eof.eo_multiply(deepcopy(C), extra_values=[2]) - np.ones((5, 5)) * 20000) == 0
+    assert np.sum(eof.eo_multiply(deepcopy(C), extra_values=[2, 3]) - np.ones((5, 5)) * 60000) == 0
 
 
 def test_divide():
     assert eof.eo_divide([15, 5]) == 3
     assert eof.eo_divide([-2, 4, 2.5]) == -0.2
     assert np.isnan(eof.eo_divide([1, np.nan], ignore_nodata=False))
+    C = np.ones((2, 5, 5)) * 100
+    assert np.sum(eof.eo_divide(deepcopy(C), extra_values=[5], extra_idxs=[1]) - np.ones((5, 5)) * 0.2) == 0
     assert eof.eo_divide([10, 2], extra_values=[5], extra_idxs=[1]) == 1
-    assert eof.eo_divide([10, 2], extra_values=[5]) == 0.25
+    assert eof.eo_divide([10, 2], extra_values=[5, 10], extra_idxs=[1, 3]) == 0.1
+    assert eof.eo_divide([10, 2], extra_values=[5]) == 1
 
 
 if __name__ == "__main__":

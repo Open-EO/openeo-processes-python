@@ -1190,27 +1190,20 @@ class EOSubtract(object):
             Is thrown when less than two values are given.
         """
 
-        extra_values, extra_idxs, n = check_extra_entries(extra_values, dimension, extra_idxs)
+        extra_values, extra_idxs, n = check_extra_entries(extra_values, dimension, extra_idxs, extra_idxs_offset=data.shape[dimension])
         number_elems = eo_count(data, dimension=dimension, expression=True) + n
         if number_elems < 2:
             raise SubtrahendMissing
-
-        new_data = list(stack_array_and_extra_values(data, extra_values, extra_idxs, dimension=dimension))
-
-        result = new_data[0]
-        for i in range(1, len(new_data)):
-            if not ignore_nodata:
-                # completely ignore nodata values
-                result = np.subtract(result, new_data[i])
-            else:
-                # if there are nan values in the (previous) result they are replaced with the non nan-values of the next layer
-                nan_idxs = np.isnan(result) & ~np.isnan(new_data[i])
-                result[nan_idxs] = new_data[i][nan_idxs]
-                # old nan values of the next layer are replaced with a zero
-                new_data[i][nan_idxs] = 0.
-                result = np.subtract(result, new_data[i])
-
-        return result
+        
+        indices = get_indices(data, dimension, extra_values)
+        data = insert_extra_values(data, indices, extra_values, extra_idxs, dimension)
+                
+        # hange sign of all elements but the first along the specified dimension
+        # to be able to use np.sum
+        data[indices] = -data[indices]
+        data = np.sum(data, axis=dimension)
+        
+        return data
 
     @staticmethod
     def exec_xar(data, ignore_nodata=True, dimension=0):
@@ -1272,18 +1265,17 @@ class EOMultiply(object):
         if number_elems < 2:
             raise MultiplicandMissing
 
-        new_data = stack_array_and_extra_values(data, extra_values, dimension=dimension)
-
         if ignore_nodata:
-            new_data[np.isnan(new_data)] = 1.
-
-        new_data = list(new_data)
-
-        result = new_data[0]
-        for i in range(1, len(new_data)):
-            result = np.multiply(result, new_data[i])
-
-        return result
+            data[np.isnan(data)] = 1.
+            
+        if extra_values.size > 0:
+            extra_values_tot = np.prod(extra_values, axis=0)
+        else:
+            extra_values_tot = 1.
+        
+        data = np.prod(data, axis=dimension, initial=extra_values_tot)
+            
+        return data
 
     @staticmethod
     def exec_xar(data, ignore_nodata=True, dimension=0):
@@ -1346,23 +1338,20 @@ class EODivide(object):
         number_elems = eo_count(data, dimension=dimension, expression=True) + n
         if number_elems < 2:
             raise DivisorMissing
-
-        new_data = list(stack_array_and_extra_values(data, extra_values, extra_idxs, dimension=dimension))
-
-        result = new_data[0]
-        for i in range(1, len(new_data)):
-            if not ignore_nodata:
-                # completely ignore nodata values
-                result = np.divide(result, new_data[i])
-            else:
-                # if there are nan values in the (previous) result they are replaced with the non nan-values of the next layer
-                nan_idxs = np.isnan(result) & ~np.isnan(new_data[i])
-                result[nan_idxs] = new_data[i][nan_idxs]
-                # old nan values of the next layer are replaced with a one
-                new_data[i][nan_idxs] = 1.
-                result = np.divide(result, new_data[i])
-
-        return result
+            
+        if ignore_nodata:
+            data[np.isnan(data)] = 1.
+            
+        indices = get_indices(data, dimension, extra_values)
+        data = insert_extra_values(data, indices, extra_values, extra_idxs, dimension)
+        
+        # Calculate reciprocal of all elements but the first along the specified dimension
+        # to be able to use np.prod
+        data = data.astype(np.float) # to avoid integer division
+        data[indices] =  1. / data[indices]
+        data = np.prod(data, axis=dimension)
+            
+        return data
 
     @staticmethod
     def exec_xar():
@@ -1419,7 +1408,7 @@ def stack_array_and_extra_values(array, extra_values, extra_idxs=None, dimension
     return new_array
 
 
-def check_extra_entries(extra_values, dimension, extra_idxs=None):
+def check_extra_entries(extra_values, dimension, extra_idxs=None, extra_idxs_offset=None):
     if not extra_values:
         extra_values = np.array([])
         extra_idxs = []
@@ -1428,9 +1417,52 @@ def check_extra_entries(extra_values, dimension, extra_idxs=None):
         extra_values = np.array(extra_values)
         n = extra_values.shape[dimension]
         if not extra_idxs:
-            extra_idxs = np.arange(len(extra_values)).tolist()
+            extra_idxs = np.arange(1, len(extra_values)+1)
+            if extra_idxs_offset:
+                extra_idxs += extra_idxs_offset
+            extra_idxs = extra_idxs.tolist()
 
     return extra_values, extra_idxs, n
+    
+
+def get_indices(data, dimension, extra_values):
+    """
+    Get indices of all elements excluding the first one on the given dimension
+    """
+    
+    # Get indices of dimension to work with
+    shape_updated = list(data.shape)
+    shape_updated[dimension] = data.shape[dimension] + len(extra_values)
+    indices = []
+    for k in np.arange(len(shape_updated)):
+        if k == dimension:
+            index = slice(1,shape_updated[k])
+        else:
+            index = slice(0,shape_updated[k])
+        indices.append(index)
+    indices = tuple(indices) # to avoid deprecation warning when doing multidim indexing
+    
+    return indices
+    
+
+def insert_extra_values(data, indices, extra_values, extra_idxs, dimension):
+    """
+    Insert extra_values in given dimension at specified indices with matching shape.
+    If no index is given, the values are appended to the array.    
+    """
+    
+    data_shape = data[indices].shape
+    offset = 0
+    for k, item in enumerate(extra_values):
+        item_array = np.ones(data_shape) * item
+        if extra_idxs[k] > data.shape[dimension]:
+            data = np.append(arr=data, values=item_array, axis=dimension)
+        else:
+            data = np.insert(arr=data, values=item_array, obj=extra_idxs[k] + offset, axis=dimension)
+        if k > 1 and extra_idxs[k] > extra_idxs[k-1]:
+            offset += 1
+            
+    return data
 
 
 def ignore_nodata_fun(data, fun):
