@@ -1122,11 +1122,11 @@ class EOSum(object):
         SummandMissing
             Is thrown when less than two values are given.
         """
-        extra_values, _, n = check_extra_entries(extra_values, dimension)
+        extra_values = extra_values if extra_values is not None else []
+        n_extra = len(extra_values)
+        n = eo_count(data, dimension=dimension, expression=True) + n_extra
 
-        number_elems = eo_count(data, dimension=dimension, expression=True) + n
-
-        if number_elems < 2:
+        if n < 2:
             raise SummandMissing
 
         if not ignore_nodata:
@@ -1155,6 +1155,7 @@ def eo_subtract():
     return EOSubtract()
 
 
+#TODO: replace no data values which appear first
 class EOSubtract(object):
 
     @staticmethod
@@ -1189,19 +1190,18 @@ class EOSubtract(object):
         SubtrahendMissing
             Is thrown when less than two values are given.
         """
-
-        extra_values, extra_idxs, n = check_extra_entries(extra_values, dimension, extra_idxs, extra_idxs_offset=data.shape[dimension])
-        number_elems = eo_count(data, dimension=dimension, expression=True) + n
-        if number_elems < 2:
+        n_extra = len(extra_values) if extra_values is not None else 0
+        n = eo_count(data, dimension=dimension, expression=True) + n_extra
+        if n < 2:
             raise SubtrahendMissing
-        
-        indices = get_indices(data, dimension, extra_values)
-        data = insert_extra_values(data, indices, extra_values, extra_idxs, dimension)
-                
-        # hange sign of all elements but the first along the specified dimension
-        # to be able to use np.sum
-        data[indices] = -data[indices]
-        data = np.sum(data, axis=dimension)
+
+        binary_fun = lambda a, b: np.subtract(a, b)
+        nodata = None
+        if ignore_nodata:
+            nodata = 0.
+
+        data = binary_iterator(data, binary_fun, extra_values=extra_values, extra_idxs=extra_idxs,
+                               dimension=dimension, nodata=nodata)
         
         return data
 
@@ -1259,16 +1259,16 @@ class EOMultiply(object):
         MultiplicandMissing
             Is thrown when less than two values are given.
         """
-        extra_values, _, n = check_extra_entries(extra_values, dimension)
-
-        number_elems = eo_count(data, dimension=dimension, expression=True) + n
-        if number_elems < 2:
+        extra_values = extra_values if extra_values is not None else []
+        n_extra = len(extra_values)
+        n = eo_count(data, dimension=dimension, expression=True) + n_extra
+        if n < 2:
             raise MultiplicandMissing
 
         if ignore_nodata:
             data[np.isnan(data)] = 1.
             
-        if extra_values.size > 0:
+        if len(extra_values) > 0:
             extra_values_tot = np.prod(extra_values, axis=0)
         else:
             extra_values_tot = 1.
@@ -1299,7 +1299,7 @@ def eo_divide():
     return EODivide()
 
 
-# TODO: better implementation?
+#TODO: replace no data values which appear first
 class EODivide(object):
     @staticmethod
     def exec_num(data, ignore_nodata=True, dimension=0):
@@ -1333,23 +1333,18 @@ class EODivide(object):
         DivisorMissing
             Is thrown when less than two values are given.
         """
-        extra_values, extra_idxs, n = check_extra_entries(extra_values, dimension, extra_idxs)
-
-        number_elems = eo_count(data, dimension=dimension, expression=True) + n
-        if number_elems < 2:
+        n_extra = len(extra_values) if extra_values is not None else 0
+        n = eo_count(data, dimension=dimension, expression=True) + n_extra
+        if n < 2:
             raise DivisorMissing
-            
+
+        binary_fun = lambda a, b: np.divide(a, b)
+        nodata = None
         if ignore_nodata:
-            data[np.isnan(data)] = 1.
-            
-        indices = get_indices(data, dimension, extra_values)
-        data = insert_extra_values(data, indices, extra_values, extra_idxs, dimension)
-        
-        # Calculate reciprocal of all elements but the first along the specified dimension
-        # to be able to use np.prod
-        data = data.astype(np.float) # to avoid integer division
-        data[indices] =  1. / data[indices]
-        data = np.prod(data, axis=dimension)
+            nodata = 1.
+
+        data = binary_iterator(data, binary_fun, extra_values=extra_values, extra_idxs=extra_idxs,
+                               dimension=dimension, nodata=nodata)
             
         return data
 
@@ -1362,117 +1357,58 @@ class EODivide(object):
         pass
 
 
-def list_array_and_extra_values(array, extra_values, extra_idxs, dimension=0):
-    if len(extra_values) == 0:
-        return list(array)
-
-    n = array.shape[dimension] + len(extra_values)
-    elems = []
-
-    array_counter = 0
-    for i in range(n):
-        if i in extra_idxs:
-            elems.append(extra_values[extra_idxs.index(i)])
-        else:
-            elems.append(array[array_counter])
-            array_counter += 1
-
-    return elems
-
-
-def stack_array_and_extra_values(array, extra_values, extra_idxs=None, dimension=0):
-
-    if len(extra_values) == 0:
-        return array
-
-    n_array = array.shape[dimension]
-    n = n_array + len(extra_values)
-    new_shape = list(array.shape)
-    new_shape[dimension] = n
-    new_array = np.zeros(tuple(new_shape))
-
-    if extra_idxs is None:
-        extra_idxs = list(range(n_array, n))
-
-    array_counter = 0
-    for i in range(n):
-        new_array_select = build_multi_dim_index(str(i), new_array.shape, dimension)  # create index string
-        if i in extra_idxs:
-            extra_value = extra_values[extra_idxs.index(i)]
-            exec("new_array[{}] = extra_value".format(new_array_select))
-        else:
-            array_select = build_multi_dim_index(str(array_counter), array.shape, dimension)  # create index string
-            exec("new_array[{}] = array[{}]".format(new_array_select, array_select))
-            array_counter += 1
-
-    return new_array
-
-
-def check_extra_entries(extra_values, dimension, extra_idxs=None, extra_idxs_offset=None):
-    if not extra_values:
-        extra_values = np.array([])
-        extra_idxs = []
-        n = 0
+def binary_iterator(arr, binary_fun, extra_values=None, extra_idxs=None, dimension=0, nodata=None):
+    n_arr = arr.shape[dimension]
+    if extra_idxs is None and extra_values is not None:  # create default indizes according to the given length of 'extra_values'
+        extra_idxs = list(range(n_arr, n_arr + len(extra_values)))
+        n_extra = len(extra_idxs)
+    elif extra_idxs is not None and extra_values is not None:
+        n_extra = len(extra_idxs)
+    elif extra_idxs is None and extra_values is None:
+        n_extra = 0
     else:
-        extra_values = np.array(extra_values)
-        n = extra_values.shape[dimension]
-        if not extra_idxs:
-            extra_idxs = np.arange(1, len(extra_values)+1)
-            if extra_idxs_offset:
-                extra_idxs += extra_idxs_offset
-            extra_idxs = extra_idxs.tolist()
+        raise Exception("Only 'extra_idxs' is given. Please specify 'extra_values' in addition.")
 
-    return extra_values, extra_idxs, n
-    
+    n = n_arr + n_extra
+    data, arr_idx = index_arr_and_values(0, arr, 0, extra_values=extra_values, extra_idxs=extra_idxs,
+                                         dimension=dimension)
+    if nodata is not None:
+        data = replace_nodata_arr_or_value(data, nodata)
+    for i in range(1, n):
+        curr_data, arr_idx = index_arr_and_values(i, arr, arr_idx, extra_values=extra_values, extra_idxs=extra_idxs,
+                                                  dimension=dimension)
+        if nodata is not None:
+            curr_data = replace_nodata_arr_or_value(curr_data, nodata)
 
-def get_indices(data, dimension, extra_values):
-    """
-    Get indices of all elements excluding the first one on the given dimension
-    """
-    
-    # Get indices of dimension to work with
-    shape_updated = list(data.shape)
-    shape_updated[dimension] = data.shape[dimension] + len(extra_values)
-    indices = []
-    for k in np.arange(len(shape_updated)):
-        if k == dimension:
-            index = slice(1,shape_updated[k])
-        else:
-            index = slice(0,shape_updated[k])
-        indices.append(index)
-    indices = tuple(indices) # to avoid deprecation warning when doing multidim indexing
-    
-    return indices
-    
+        data = binary_fun(data, curr_data)
 
-def insert_extra_values(data, indices, extra_values, extra_idxs, dimension):
-    """
-    Insert extra_values in given dimension at specified indices with matching shape.
-    If no index is given, the values are appended to the array.    
-    """
-    
-    data_shape = data[indices].shape
-    offset = 0
-    for k, item in enumerate(extra_values):
-        item_array = np.ones(data_shape) * item
-        if extra_idxs[k] > data.shape[dimension]:
-            data = np.append(arr=data, values=item_array, axis=dimension)
-        else:
-            data = np.insert(arr=data, values=item_array, obj=extra_idxs[k] + offset, axis=dimension)
-        if k > 1 and extra_idxs[k] > extra_idxs[k-1]:
-            offset += 1
-            
     return data
 
 
-def ignore_nodata_fun(data, fun):
-    data_nan_idxs = pd.isnull(data)
-    data_masked = data[~data_nan_idxs]
-    if len(data_masked) == 0:
-        return [np.nan]
+def index_arr_and_values(idx, arr, arr_idx, extra_values=None, extra_idxs=None, dimension=0):
+    if extra_idxs is not None and extra_values is not None:
+        if idx in extra_idxs:
+            return extra_values[extra_idxs.index(idx)], arr_idx
+        else:
+            arr_select = build_multi_dim_index(arr_idx, arr.shape, dimension)  # create index string
+            arr_idx += 1
+            return eval("arr[{}]".format(arr_select)), arr_idx
     else:
-        return functools.reduce(fun, data_masked)
+        arr_select = build_multi_dim_index(arr_idx, arr.shape, dimension)  # create index string
+        arr_idx += 1
+        return eval("arr[{}]".format(arr_select)), arr_idx
+
+
+def replace_nodata_arr_or_value(data, nodata):
+    if isinstance(data, np.ndarray):
+        data[np.isnan(data)] = nodata
+    else:
+        if np.isnan(data):
+            data = nodata
+
+    return data
+
 
 if __name__ == '__main__':
     A = np.ones((10, 10000, 10000))
-    B = eo_subtract(A, extra_values=[2])
+    B = eo_subtract(A, extra_values=[2, 3])

@@ -79,6 +79,7 @@ def list2nparray(x):
 
 def build_multi_dim_index(index_name, shape, axis):
     dims = len(shape)
+    index_name = str(index_name)
     expand_dim_exprs = [["None"] * (dims - 1)] * (dims - 1)
     for i, elem in enumerate(expand_dim_exprs):
         elem_cp = copy.deepcopy(elem)
