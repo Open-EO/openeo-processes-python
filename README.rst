@@ -3,7 +3,11 @@ eoFunctions
 ===========
 
 
-eoFunctions is a collection of geo-physical functions developed for Earth Observation satellite data.
+eoFunctions is a Python representation of the openEO processes.
+
+The list supported here tries to be as complete as possible, but some processes (typically the 'cube' ones) are intrinsically connected to the back-end implementation and data model, and therefore are omitted here. Examples of missing processes are 'load_collection' or 'merge_cubes'.
+
+Processes are currently aligned with openEO API version 0.4.x .
 
 Installation
 ============
