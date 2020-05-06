@@ -1,12 +1,20 @@
+"""
+Most tests are in alignment with:
+https://openeo.org/documentation/1.0/processes.html
+"""
+
 import sys
 import os
-sys.path.append(os.path.dirname(__file__))
 import numpy as np
 import eofunctions as eof
+
+sys.path.append(os.path.dirname(__file__))
 from utils_test import assert_list_items
 
 
 def test_array_contains():
+    """ Checks if array contains certain elements. """
+
     assert eof.eo_array_contains([1, 2, 3], element=2) == True
     assert eof.eo_array_contains(["A", "B", "C"], element="b") == False
     assert eof.eo_array_contains([1, 2, 3], element="2") == False
@@ -18,6 +26,8 @@ def test_array_contains():
 
 
 def test_array_element():
+    """ Checks if array certain elements can be retrieved from an array via an index. """
+
     assert eof.eo_array_element([9, 8, 7, 6, 5], index=2) == 7
     assert eof.eo_array_element(["A", "B", "C"], index=0) == "A"
     assert np.isnan(eof.eo_array_element([], index=0, return_nodata=True))
@@ -90,7 +100,7 @@ def test_clip():
 
 
 if __name__ == "__main__":
-    #test_array_contains()
+    test_array_contains()
     test_array_element()
     #test_count()
     #test_first()

@@ -6,8 +6,8 @@ import pandas as pd
 import xarray_extras as xar_addons
 
 
-from eofunctions.eo_utils import process
-from eofunctions.eo_utils import build_multi_dim_index
+from eofunctions.utils import process
+from eofunctions.utils import build_multi_dim_index
 from eofunctions.arrays import eo_count
 from eofunctions.checks import eo_is_empty
 from eofunctions.checks import eo_is_valid
@@ -20,39 +20,83 @@ from eofunctions.errors import MultiplicandMissing
 from eofunctions.errors import DivisorMissing
 
 
-# TODO: what should we do with numbers in case of reducers?
 ########################################################################################################################
 # General Functions (Data type/array independent functions)
 ########################################################################################################################
-def eo_e():
+
+def e():
+    """
+    The real number e is a mathematical constant that is the base of the natural logarithm such that ln(e) = 1.
+    The numerical value is approximately 2.71828.
+
+    Returns
+    -------
+    float :
+        The numerical value of Euler's number.
+    """
     return np.e
 
 
-def eo_pi():
+def pi():
+    """
+    The real number Pi (π) is a mathematical constant that is the ratio of the circumference of a circle to its
+    diameter. The numerical value is approximately 3.14159.
+
+    Returns
+    -------
+    float :
+        The numerical value of Pi.
+
+    """
     return np.pi
 
 
-def eo_not(x):
-    return not x
+def not_(x):
+    """
+    Inverts a single boolean so that True gets False and False gets True.
+    The no-data value None is passed through and therefore gets propagated.
+
+    Parameters
+    ----------
+    x : bool
+        Boolean value to invert.
+
+    Returns
+    -------
+    bool :
+        Inverted boolean value.
+
+    """
+    return not x if x is not None else x
 
 
-def eo_floor(x):
+def floor(x):
+    """
+
+    Parameters
+    ----------
+    x
+
+    Returns
+    -------
+
+    """
     return np.floor(x)
 
 
-def eo_ceil(x):
+def ceil(x):
     return np.ceil(x)
 
 
-def eo_exp(x):
+def exp(x):
     return np.exp(x)
 
 
-def eo_ln(x):
+def ln(x):
     return np.log(x)
 
 
-def eo_log(x, base):
+def log(x, base):
     return np.log(x)/np.log(base)
 
 

@@ -4,7 +4,7 @@ import dask
 import numpy as np
 import pandas as pd
 
-from eofunctions.eo_utils import process
+from eofunctions.utils import process
 
 
 # TODO: test if this works for different data types

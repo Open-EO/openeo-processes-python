@@ -1,25 +1,34 @@
 import sys
 import os
-sys.path.append(os.path.dirname(__file__))
+import numpy as np
 from copy import deepcopy
 import eofunctions as eof
-import numpy as np
+
+sys.path.append(os.path.dirname(__file__))
 from utils_test import assert_list_items
 
 
 def test_e():
-    assert eof.eo_e() == np.e
+    """ Tests `e` function. """
+    assert eof.e() == np.e
 
 
 def test_pi():
-    assert eof.eo_pi() == np.pi
+    """ Tests `pi` function. """
+    assert eof.pi() == np.pi
 
+
+def test_not_():
+    """ Tests `not_` function. """
+    assert not eof.not_(True)
+    assert eof.not_(False)
+    assert eof.not_(None) is None
 
 def test_int():
-    assert eof.eo_int(0) == 0
-    assert eof.eo_int(3.5) == 3
-    assert eof.eo_int(-0.4) == 0
-    assert eof.eo_int(-3.5) == -3
+    assert eof.int(0) == 0
+    assert eof.int(3.5) == 3
+    assert eof.int(-0.4) == 0
+    assert eof.int(-3.5) == -3
 
 
 def test_floor():
@@ -301,6 +310,7 @@ def test_divide():
 if __name__ == "__main__":
     test_e()
     test_pi()
+    test_not_()
     test_int()
     test_floor()
     test_ceil()

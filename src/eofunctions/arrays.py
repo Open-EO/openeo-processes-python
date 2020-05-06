@@ -1,16 +1,66 @@
+
+
 import numpy as np
 import pandas as pd
 
-from eofunctions.eo_utils import build_multi_dim_index
-from eofunctions.eo_utils import process
+from eofunctions.utils import build_multi_dim_index
+from eofunctions.utils import process
 from eofunctions.checks import eo_is_valid
 from eofunctions.checks import eo_is_empty
 
 from eofunctions.errors import IndexOutOfBounds
 
 
-def eo_array_contains(data, element):
-    return element in data
+########################################################################################################################
+# Array Contains Process
+########################################################################################################################
+
+@process
+def eo_array_contains():
+    """
+    Checks if an element is contained in the data.
+
+    Notes
+    -----
+    Function is executed in decorator `process`.
+
+    """
+    return EOArrayElement()
+
+
+class EOArrayContains:
+
+    @staticmethod
+    def exec_num():
+        pass
+
+    @staticmethod
+    def exec_np(data, element):
+        """
+        Checks if `element` is contained in `data`.
+
+        Parameters
+        ----------
+        data : np.array
+            Input data as a numpy array.
+        element : object
+            Arbitrary array element.
+
+        Returns
+        -------
+        bool :
+            True if `element` is in `data`.
+
+        """
+        return element in data
+
+    @staticmethod
+    def exec_xar():
+        pass
+
+    @staticmethod
+    def exec_da():
+        pass
 
 
 ########################################################################################################################
@@ -19,12 +69,18 @@ def eo_array_contains(data, element):
 
 @process
 def eo_array_element():
+    """
+    Returns a data element corresponding to the given index.
+
+    Notes
+    -----
+    Function is executed in decorator `process`.
+
+    """
     return EOArrayElement()
 
 
 class EOArrayElement(object):
-    def __init__(self):
-        pass
 
     @staticmethod
     def exec_num():
@@ -33,27 +89,27 @@ class EOArrayElement(object):
     @staticmethod
     def exec_np(data, index=0, dimension=0, return_nodata=False):
         """
-        Returns the element of 'data' corresponding to the given index.
+        Returns the element of `data` corresponding to the given index.
 
         Parameters
         ----------
-        data: np.array
+        data : np.array
             Input data as a numpy array.
-        index: int
+        index : int
             Array index.
-        return_nodata: bool, optional
-            If true (default is False), np.nan will be returned if the element cannot be find. If false and the
+        return_nodata : bool, optional
+            If true (default is false), np.nan will be returned if the element cannot be found. If false and the
             element cannot be found, an IndexOutOfBounds error will be raised.
 
         Returns
         -------
-        count: int
+        count : int
             Count of the data.
 
         Raises
         ------
         IndexOutOfBounds
-            If the element specified by the index cannot be found and 'return_nodata' is false.
+            If the element specified by the index cannot be found and `return_nodata` is false.
 
         """
         if index >= data.shape[dimension]:

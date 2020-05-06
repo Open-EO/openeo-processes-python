@@ -7,8 +7,7 @@ https://open-eo.github.io/openeo-api/v/0.4.0/processreference/ - in comparison t
 import numpy as np
 import pandas as pd
 
-from utils.time import str2time
-
+from eofunctions.utils import str2time
 from eofunctions.checks import eo_is_empty
 from eofunctions.checks import eo_is_valid
 
