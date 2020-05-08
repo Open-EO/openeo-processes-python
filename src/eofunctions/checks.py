@@ -8,7 +8,21 @@ from eofunctions.utils import process
 
 
 # TODO: test if this works for different data types
-def eo_is_empty(data):
+def is_empty(data):
+    """
+    Checks if an object is empty (its length is zero) or not.
+
+    Parameters
+    ----------
+    data : object
+        Any Class instance, which has a __length__ class method.
+
+    Returns
+    -------
+    bool :
+        True if object is emtpy, False if not.
+
+    """
     if len(data) == 0:
         return True
     else:
