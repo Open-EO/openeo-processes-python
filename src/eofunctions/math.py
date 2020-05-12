@@ -1,23 +1,12 @@
-import operator
-import functools
-
 import numpy as np
-import pandas as pd
 import xarray_extras as xar_addons
 import builtins
 
 from eofunctions.utils import process
-from eofunctions.utils import build_multi_dim_index
-from eofunctions.arrays import eo_count
 from eofunctions.checks import is_empty
-from eofunctions.checks import eo_is_valid
 
 from eofunctions.errors import QuantilesParameterConflict
 from eofunctions.errors import QuantilesParameterMissing
-from eofunctions.errors import SummandMissing
-from eofunctions.errors import SubtrahendMissing
-from eofunctions.errors import MultiplicandMissing
-from eofunctions.errors import DivisorMissing
 
 
 ########################################################################################################################
@@ -396,7 +385,7 @@ class Round:
             The rounded number.
 
         """
-        return round(x, p)
+        return builtins.round(x, p)
 
     @staticmethod
     def exec_np(x, p=0):
@@ -881,27 +870,27 @@ class Cosh:
 
 
 ########################################################################################################################
-# Arccosh Process
+# Arcosh Process
 ########################################################################################################################
 
 @process
-def arccosh():
+def arcosh():
     """
-    Returns class instance of `Arccosh`.
-    For more details, please have a look at the implementations inside `Arccosh`.
+    Returns class instance of `Arcosh`.
+    For more details, please have a look at the implementations inside `Arcosh`.
 
     Returns
     -------
-    Arccosh :
-        Class instance implementing all 'arccosh' processes.
+    Arcosh :
+        Class instance implementing all 'arcosh' processes.
 
     """
-    return Arccosh()
+    return Arcosh()
 
 
-class Arccosh:
+class Arcosh:
     """
-    Class implementing all 'arccosh' processes.
+    Class implementing all 'arcosh' processes.
 
     """
 
@@ -909,7 +898,7 @@ class Arccosh:
     def exec_num(x):
         """
         Computes the inverse hyperbolic cosine of `x`. It is the inverse function of the hyperbolic cosine so that
-        `arccosh(cosh(x)) = x`. Works on radians only. The no-data value None is passed through and therefore gets
+        `arcosh(cosh(x)) = x`. Works on radians only. The no-data value None is passed through and therefore gets
         propagated.
 
         Parameters
@@ -929,7 +918,7 @@ class Arccosh:
     def exec_np(x):
         """
         Computes the inverse hyperbolic cosine of `x`. It is the inverse function of the hyperbolic cosine so that
-        `arccosh(cosh(x)) = x`. Works on radians only. The no-data value np.nan is passed through and therefore gets
+        `arcosh(cosh(x)) = x`. Works on radians only. The no-data value np.nan is passed through and therefore gets
         propagated.
 
         Parameters
@@ -1173,27 +1162,27 @@ class Sinh:
 
 
 ########################################################################################################################
-# Arcsinh Process
+# Arsinh Process
 ########################################################################################################################
 
 @process
-def arcsinh():
+def arsinh():
     """
-    Returns class instance of `Arcsinh`.
-    For more details, please have a look at the implementations inside `Arcsinh`.
+    Returns class instance of `Arsinh`.
+    For more details, please have a look at the implementations inside `Arsinh`.
 
     Returns
     -------
-    Arcsinh :
-        Class instance implementing all 'arcsinh' processes.
+    Arsinh :
+        Class instance implementing all 'arsinh' processes.
 
     """
-    return Arcsinh()
+    return Arsinh()
 
 
-class Arcsinh:
+class Arsinh:
     """
-    Class implementing all 'arcsinh' processes.
+    Class implementing all 'arsinh' processes.
 
     """
 
@@ -1201,7 +1190,7 @@ class Arcsinh:
     def exec_num(x):
         """
         Computes the inverse hyperbolic sine of `x`. It is the inverse function of the hyperbolic sine so that
-        `arcsinh(sinh(x)) = x`. Works on radians only. The no-data value None is passed through and therefore gets
+        `arsinh(sinh(x)) = x`. Works on radians only. The no-data value None is passed through and therefore gets
         propagated.
 
         Parameters
@@ -1221,7 +1210,7 @@ class Arcsinh:
     def exec_np(x):
         """
         Computes the inverse hyperbolic sine of `x`. It is the inverse function of the hyperbolic sine so that
-        `arcsinh(sinh(x)) = x`. Works on radians only. The no-data value np.nan is passed through and therefore gets
+        `arsinh(sinh(x)) = x`. Works on radians only. The no-data value np.nan is passed through and therefore gets
         propagated.
 
         Parameters
@@ -1469,27 +1458,27 @@ class Tanh:
 
 
 ########################################################################################################################
-# Arctanh Process
+# Artanh Process
 ########################################################################################################################
 
 @process
-def arctanh():
+def artanh():
     """
-    Returns class instance of `Arctanh`.
-    For more details, please have a look at the implementations inside `Arctanh`.
+    Returns class instance of `Artanh`.
+    For more details, please have a look at the implementations inside `Artanh`.
 
     Returns
     -------
-    Arctanh :
-        Class instance implementing all 'arctanh' processes.
+    Artanh :
+        Class instance implementing all 'artanh' processes.
 
     """
-    return Arctanh()
+    return Artanh()
 
 
-class Arctanh:
+class Artanh:
     """
-    Class implementing all 'arctanh' processes.
+    Class implementing all 'artanh' processes.
 
     """
 
@@ -1497,7 +1486,7 @@ class Arctanh:
     def exec_num(x):
         """
         Computes the inverse hyperbolic tangent of `x`. It is the inverse function of the hyperbolic tangent so that
-        `arctanh(tanh(x)) = x`. Works on radians only. The no-data value None is passed through and therefore gets
+        `artanh(tanh(x)) = x`. Works on radians only. The no-data value None is passed through and therefore gets
         propagated.
 
         Parameters
@@ -1517,7 +1506,7 @@ class Arctanh:
     def exec_np(x):
         """
         Computes the inverse hyperbolic tangent of `x`. It is the inverse function of the hyperbolic tangent so that
-        `arctanh(tanh(x)) = x`. Works on radians only. The no-data value np.nan is passed through and therefore gets
+        `artanh(tanh(x)) = x`. Works on radians only. The no-data value np.nan is passed through and therefore gets
         propagated.
 
         Parameters
@@ -1721,7 +1710,7 @@ class LinearScaleRange:
 
 
 ########################################################################################################################
-# Apply Factor Process
+# Scale Process
 ########################################################################################################################
 
 @process
@@ -2198,7 +2187,7 @@ class Power:
             The computed value for `base` raised to the power of `p`.
 
         """
-        return np.power(base, p) if base is not None and p is not None else None
+        return np.power(base, float(p)) if base is not None and p is not None else None  # float(p) because of error message in NumPy: ValueError: Integers to negative integer powers are not allowed.
 
     @staticmethod
     def exec_np(base, p):
@@ -2220,7 +2209,7 @@ class Power:
 
         """
 
-        return np.power(base, p)
+        return np.power(base, float(p))  # float(p) because of error message in NumPy: ValueError: Integers to negative integer powers are not allowed.
 
     @staticmethod
     def exec_xar():
@@ -3464,50 +3453,65 @@ class Cumsum:
 ########################################################################################################################
 
 @process
-def eo_sum():
-    return EOSum()
+def sum():
+    """
+    Returns class instance of `Sum`.
+    For more details, please have a look at the implementations inside `Sum`.
+
+    Returns
+    -------
+    Sum :
+        Class instance implementing all 'sum' processes.
+
+    """
+    return Sum()
 
 
-class EOSum(object):
+class Sum:
+    """
+    Class implementing all 'sum' processes.
+
+    """
 
     @staticmethod
-    def exec_num(data, ignore_nodata=True, dimension=0):
-        return data
+    def exec_num():
+        pass
 
     @staticmethod
     def exec_np(data, ignore_nodata=True, dimension=0, extra_values=None):
         """
-        Sums up all elements in a sequential array of numbers and returns the computed sum.
-        By default no-data values are ignored. Setting 'ignore_nodata' to False considers no-data values so that np.nan
-        is returned if any element is such a value.
+        Sums up all elements in a sequential array of numbers and returns the computed sum. By default no-data values
+        are ignored. Setting `ignore_nodata` to false considers no-data values so that np.nan is returned if any element
+        is such a value. The computations follow IEEE Standard 754.
+
 
         Parameters
         ----------
-        data: np.array
-            An array of numbers.
-        ignore_nodata: bool, optional
-            Specifies if np.nan values are ignored or not (True is default).
-        dimension: int, optional
-            Dimension/axis of interest (0 is default).
+        data : np.array
+            An array of numbers. An empty array resolves always with np.nan.
+        ignore_nodata : bool, optional
+            Indicates whether no-data values are ignored or not. Ignores them by default (=True).
+            Setting this flag to False considers no-data values so that np.nan is returned if any value is such a value.
+        dimension : int, optional
+            Defines the dimension to calculate the sum along (default is 0).
         extra_values: list, optional
             Offers to add additional elements to the computed sum.
 
         Returns
         -------
-        np.array
+        np.array :
             The computed sum of the sequence of numbers.
 
-        Raises
-        ------
-        SummandMissing
-            Is thrown when less than two values are given.
+        Notes
+        -----
+        `extra_values` have been introduced to handle np.array and single value interaction.
+        It is more efficient to add the additional summands after computing the sum along the dimension of the array.
+
         """
         extra_values = extra_values if extra_values is not None else []
-        n_extra = len(extra_values)
-        n = eo_count(data, dimension=dimension, expression=True) + n_extra
 
-        if n < 2:
-            raise SummandMissing
+        if is_empty(data) and len(extra_values) == 0:
+            return np.nan
 
         if not ignore_nodata:
             summand = np.sum(extra_values)
@@ -3517,12 +3521,270 @@ class EOSum(object):
             return np.nansum(data, axis=dimension) + summand
 
     @staticmethod
-    def exec_xar(data, ignore_nodata=True, dimension=0):
+    def exec_xar(data, ignore_nodata=True, dimension=0, extra_values=None):
+        """
+        Sums up all elements in a sequential array of numbers and returns the computed sum. By default no-data values
+        are ignored. Setting `ignore_nodata` to false considers no-data values so that np.nan is returned if any element
+        is such a value. The computations follow IEEE Standard 754.
 
-        return data.sum(data, dim=dimension, skipna=~ignore_nodata)
+
+        Parameters
+        ----------
+        data : xr.DataArray
+            An array of numbers. An empty array resolves always with np.nan.
+        ignore_nodata : bool, optional
+            Indicates whether no-data values are ignored or not. Ignores them by default (=True).
+            Setting this flag to False considers no-data values so that np.nan is returned if any value is such a value.
+        dimension : int, optional
+            Defines the dimension to calculate the sum along (default is 0).
+        extra_values: list, optional
+            Offers to add additional elements to the computed sum.
+
+        Returns
+        -------
+        xr.DataArray :
+            The computed sum of the sequence of numbers.
+
+        Notes
+        -----
+        `extra_values` have been introduced to handle np.array and single value interaction.
+        It is more efficient to add the additional summands after computing the sum along the dimension of the array.
+
+        """
+        extra_values = extra_values if extra_values is not None else []
+
+        if is_empty(data) and len(extra_values) == 0:
+            return np.nan
+
+        if not ignore_nodata:
+            summand = np.sum(extra_values)
+        else:
+            summand = np.nansum(extra_values)
+
+        return data.sum(data, dim=dimension, skipna=~ignore_nodata) + summand
 
     @staticmethod
-    def exec_da(self):
+    def exec_da():
+        pass
+
+########################################################################################################################
+# Product Process
+########################################################################################################################
+
+@process
+def product():
+    """
+    Returns class instance of `Product`.
+    For more details, please have a look at the implementations inside `Product`.
+
+    Returns
+    -------
+    Product :
+        Class instance implementing all 'product' processes.
+
+    """
+    return Product()
+
+
+class Product:
+    """
+    Class implementing all 'product' processes.
+
+    """
+
+    @staticmethod
+    def exec_num():
+        pass
+
+    @staticmethod
+    def exec_np(data, ignore_nodata=True, dimension=0, extra_values=None):
+        """
+        Multiplies all elements in a sequential array of numbers and returns the computed product. By default no-data
+        values are ignored. Setting `ignore_nodata` to False considers no-data values so that np.nan is returned if any
+        element is such a value. The computations follow IEEE Standard 754.
+
+        Parameters
+        ----------
+        data : np.array
+            An array of numbers. An empty array resolves always with np.nan.
+        ignore_nodata : bool, optional
+            Indicates whether no-data values are ignored or not. Ignores them by default (=True).
+            Setting this flag to False considers no-data values so that np.nan is returned if any value is such a value.
+        dimension : int, optional
+            Defines the dimension to calculate the product along (default is 0).
+        extra_values: list, optional
+            Offers to add additional elements to the computed product.
+
+        Returns
+        -------
+        np.array :
+            The computed product of the sequence of numbers.
+
+        Notes
+        -----
+        `extra_values` have been introduced to handle np.array and single value interaction.
+        It is more efficient to multiply the additional multiplicands after computing the product along the given
+        dimension of the array.
+
+        """
+        extra_values = extra_values if extra_values is not None else []
+
+        if is_empty(data) and len(extra_values) == 0:
+            return np.nan
+
+        if ignore_nodata:
+            data[np.isnan(data)] = 1.
+
+        if len(extra_values) > 0:
+            multiplicand = np.prod(extra_values)
+        else:
+            multiplicand = 1.
+
+        return np.prod(data, axis=dimension, initial=multiplicand)
+
+    @staticmethod
+    def exec_xar(data, ignore_nodata=True, dimension=0, extra_values=None):
+        """
+        Multiplies all elements in a sequential array of numbers and returns the computed product. By default no-data
+        values are ignored. Setting `ignore_nodata` to False considers no-data values so that np.nan is returned if any
+        element is such a value. The computations follow IEEE Standard 754.
+
+
+        Parameters
+        ----------
+        data : xr.DataArray
+            An array of numbers. An empty array resolves always with np.nan.
+        ignore_nodata : bool, optional
+            Indicates whether no-data values are ignored or not. Ignores them by default (=True).
+            Setting this flag to False considers no-data values so that np.nan is returned if any value is such a value.
+        dimension : int, optional
+            Defines the dimension to calculate the product along (default is 0).
+        extra_values: list, optional
+            Offers to add additional elements to the computed sum.
+
+        Returns
+        -------
+        xr.DataArray :
+            The computed product of the sequence of numbers.
+
+        Notes
+        -----
+        `extra_values` have been introduced to handle np.array and single value interaction.
+        It is more efficient to multiply the additional multiplicands after computing the product along the given
+        dimension of the array.
+
+        """
+        extra_values = extra_values if extra_values is not None else []
+
+        if is_empty(data) and len(extra_values) == 0:
+            return np.nan
+
+        if ignore_nodata:
+            data[np.isnan(data)] = 1.
+
+        if len(extra_values) > 0:
+            multiplicand = np.prod(extra_values)
+        else:
+            multiplicand = 1.
+
+        return data.prod(data, dim=dimension, skipna=~ignore_nodata) * multiplicand
+
+    @staticmethod
+    def exec_da():
+        pass
+
+
+########################################################################################################################
+# Add Process
+########################################################################################################################
+
+@process
+def add():
+    """
+    Returns class instance of `Add`.
+    For more details, please have a look at the implementations inside `Add`.
+
+    Returns
+    -------
+    Add :
+        Class instance implementing all 'add' processes.
+
+    """
+    return Add()
+
+
+class Add:
+    """
+    Class implementing all 'add' processes.
+
+    """
+
+    @staticmethod
+    def exec_num(x, y):
+        """
+        Sums up the two numbers `x` and `y` (`x + y`) and returns the computed sum. No-data values are taken into
+        account so that None is returned if any element is such a value. The computations follow IEEE Standard 754.
+
+        Parameters
+        ----------
+        x : int or float
+            The first summand.
+        y : int or float
+            The second summand.
+
+        Returns
+        -------
+        float or int :
+            The computed sum of the two numbers.
+
+        """
+
+        return x + y if x is not None and y is not None else None
+
+    @staticmethod
+    def exec_np(x, y):
+        """
+        Sums up the two numbers `x` and `y` (`x + y`) and returns the computed sum. No-data values are taken into
+        account so that np.nan is returned if any element is such a value. The computations follow IEEE Standard 754.
+
+        Parameters
+        ----------
+        x : np.array or int or float
+            The first summand.
+        y : np.array or int or float
+            The second summand.
+
+        Returns
+        -------
+        np.array or float or int :
+            The computed sum.
+
+        """
+        return x + y
+
+    @staticmethod
+    def exec_xar(x, y):
+        """
+        Sums up the two numbers `x` and `y` (`x + y`) and returns the computed sum. No-data values are taken into
+        account so that np.nan is returned if any element is such a value. The computations follow IEEE Standard 754.
+
+        Parameters
+        ----------
+        x : xr.DataArray or int or float
+            The first summand.
+        y :  xr.DataArray or int or float
+            The second summand.
+
+        Returns
+        -------
+         xr.DataArray or float or int :
+            The computed sum.
+
+        """
+        return x + y
+
+    @staticmethod
+    def exec_da():
         pass
 
 
@@ -3531,67 +3793,95 @@ class EOSum(object):
 ########################################################################################################################
 
 @process
-def eo_subtract():
-    return EOSubtract()
+def subtract():
+    """
+    Returns class instance of `Subtract`.
+    For more details, please have a look at the implementations inside `Subtract`.
+
+    Returns
+    -------
+    Subtract :
+        Class instance implementing all 'subtract' processes.
+
+    """
+    return Subtract()
 
 
-#TODO: replace no data values which appear first
-class EOSubtract(object):
+class Subtract:
+    """
+    Class implementing all 'subtract' processes.
+
+    """
 
     @staticmethod
-    def exec_num(data, ignore_nodata=True, dimension=0):
-        return data
-
-    @staticmethod
-    def exec_np(data, ignore_nodata=True, dimension=0, extra_values=None, extra_idxs=None):
+    def exec_num(x, y):
         """
-        Takes the first element of a sequential array of numbers and subtracts all other elements from it.
-        By default no-data values are ignored. Setting 'ignore_nodata' to False considers no-data values so that np.nan
-        is returned if any element is such a value.
+        Subtracts argument `y` from the argument `x` (`x - y`) and returns the computed result. No-data values are
+        taken into account so that None is returned if any element is such a value. The computations follow
+        IEEE Standard 754.
 
         Parameters
         ----------
-        data: np.array
-            An array of numbers.
-        ignore_nodata: bool, optional
-            Specifies if np.nan values are ignored or not (True is default).
-        dimension: int, optional
-            Dimension/axis of interest (0 is default).
-        extra_values: list, optional
-            Offers to subtract additional elements to the computed subtraction.
+        x : int or float
+            The minuend.
+        y : int or float
+            The subtrahend.
 
         Returns
         -------
-        np.array
-            The computed subtraction of the sequence of numbers.
+        float or int :
+            The computed result.
 
-        Raises
-        ------
-        SubtrahendMissing
-            Is thrown when less than two values are given.
         """
-        n_extra = len(extra_values) if extra_values is not None else 0
-        n = eo_count(data, dimension=dimension, expression=True) + n_extra
-        if n < 2:
-            raise SubtrahendMissing
 
-        binary_fun = lambda a, b: np.subtract(a, b)
-        nodata = None
-        if ignore_nodata:
-            nodata = 0.
-
-        data = binary_iterator(data, binary_fun, extra_values=extra_values, extra_idxs=extra_idxs,
-                               dimension=dimension, nodata=nodata)
-        
-        return data
+        return x - y if x is not None and y is not None else None
 
     @staticmethod
-    def exec_xar(data, ignore_nodata=True, dimension=0):
+    def exec_np(x, y):
+        """
+        Subtracts argument `y` from the argument `x` (`x - y`) and returns the computed result. No-data values are
+        taken into account so that np.nan is returned if any element is such a value. The computations follow
+        IEEE Standard 754.
 
-        return data.sum(-data, dim=dimension, skipna=~ignore_nodata)
+        Parameters
+        ----------
+        x : np.array or int or float
+            The minuend.
+        y : np.array or int or float
+            The subtrahend.
+
+        Returns
+        -------
+        np.array or float or int :
+            The computed result.
+
+        """
+        return x - y
 
     @staticmethod
-    def exec_da(self):
+    def exec_xar(x, y):
+        """
+        Subtracts argument `y` from the argument `x` (`x - y`) and returns the computed result. No-data values are
+        taken into account so that np.nan is returned if any element is such a value. The computations follow
+        IEEE Standard 754.
+
+        Parameters
+        ----------
+        x : xr.DataArray or int or float
+            The minuend.
+        y :  xr.DataArray or int or float
+            The subtrahend.
+
+        Returns
+        -------
+         xr.DataArray or float or int :
+            The computed result.
+
+        """
+        return x - y
+
+    @staticmethod
+    def exec_da():
         pass
 
 
@@ -3600,74 +3890,95 @@ class EOSubtract(object):
 ########################################################################################################################
 
 @process
-def eo_multiply():
-    return EOMultiply()
+def multiply():
+    """
+    Returns class instance of `Multiply`.
+    For more details, please have a look at the implementations inside `Multiply`.
+
+    Returns
+    -------
+    Multiply :
+        Class instance implementing all 'multiply' processes.
+
+    """
+    return Multiply()
 
 
-# TODO: better implementation?
-class EOMultiply(object):
+class Multiply:
+    """
+    Class implementing all 'multiply' processes.
+
+    """
 
     @staticmethod
-    def exec_num(data, ignore_nodata=True, dimension=0):
-        return data
-
-    @staticmethod
-    def exec_np(data, ignore_nodata=True, dimension=0, extra_values=None):
+    def exec_num(x, y):
         """
-        Multiplies all elements in a sequential array of numbers and returns the computed product.
-        By default no-data values are ignored. Setting 'ignore_nodata' to False considers no-data values so that np.nan
-        is returned if any element is such a value.
+        Multiplies the two numbers `x` and `y` (`x * y`) and returns the computed product.
+        No-data values are taken into account so that None is returned if any element is such a value.
+        The computations follow IEEE Standard 754.
 
         Parameters
         ----------
-        data: np.array
-            An array of numbers.
-        ignore_nodata: bool, optional
-            Specifies if np.nan values are ignored or not (True is default).
-        dimension: int, optional
-            Dimension/axis of interest (0 is default).
-        extra_values: list, optional
-            Offers to subtract additional elements to the computed subtraction.
+        x : int or float
+            The multiplier.
+        y : int or float
+            The multiplicand.
 
         Returns
         -------
-        np.array
-            The computed product of the sequence of numbers.
+        float or int :
+            The computed product of the two numbers.
 
-        Raises
-        ------
-        MultiplicandMissing
-            Is thrown when less than two values are given.
         """
-        extra_values = extra_values if extra_values is not None else []
-        n_extra = len(extra_values)
-        n = eo_count(data, dimension=dimension, expression=True) + n_extra
-        if n < 2:
-            raise MultiplicandMissing
-
-        if ignore_nodata:
-            data[np.isnan(data)] = 1.
-            
-        if len(extra_values) > 0:
-            extra_values_tot = np.prod(extra_values, axis=0)
-        else:
-            extra_values_tot = 1.
-        
-        data = np.prod(data, axis=dimension, initial=extra_values_tot)
-            
-        return data
+        return x * y if x is not None and y is not None else None
 
     @staticmethod
-    def exec_xar(data, ignore_nodata=True, dimension=0):
-        pass
+    def exec_np(x, y):
+        """
+        Multiplies the two numbers `x` and `y` (`x * y`) and returns the computed product.
+        No-data values are taken into account so that np.nan is returned if any element is such a value.
+        The computations follow IEEE Standard 754.
+
+        Parameters
+        ----------
+        x : np.array or int or float
+            The multiplier.
+        y : np.array or int or float
+            The multiplicand.
+
+        Returns
+        -------
+        np.array or float or int :
+            The computed product.
+
+        """
+        return x * y
 
     @staticmethod
-    def exec_da(self):
+    def exec_xar(x, y):
+        """
+        Multiplies the two numbers `x` and `y` (`x * y`) and returns the computed product.
+        No-data values are taken into account so that np.nan is returned if any element is such a value.
+        The computations follow IEEE Standard 754.
+
+        Parameters
+        ----------
+        x : xr.DataArray or int or float
+            The multiplier.
+        y : xr.DataArray or int or float
+            The multiplicand.
+
+        Returns
+        -------
+        xr.DataArray or float or int :
+            The computed product.
+
+        """
+        return x * y
+
+    @staticmethod
+    def exec_da():
         pass
-
-
-def eo_product(data, axis=0, ignore_nodata=True):
-    return eo_multiply(data, axis=axis, ignore_nodata=ignore_nodata)
 
 
 ########################################################################################################################
@@ -3675,118 +3986,95 @@ def eo_product(data, axis=0, ignore_nodata=True):
 ########################################################################################################################
 
 @process
-def eo_divide():
-    return EODivide()
+def divide():
+    """
+    Returns class instance of `Divide`.
+    For more details, please have a look at the implementations inside `Divide`.
+
+    Returns
+    -------
+    Divide :
+        Class instance implementing all 'divide' processes.
+
+    """
+    return Divide()
 
 
-#TODO: replace no data values which appear first
-class EODivide(object):
+class Divide:
+    """
+    Class implementing all 'divide' processes.
+
+    """
+
     @staticmethod
-    def exec_num(data, ignore_nodata=True, dimension=0):
-        return data
-
-    @staticmethod
-    def exec_np(data, ignore_nodata=True, dimension=0, extra_values=None, extra_idxs=None):
+    def exec_num(x, y):
         """
-        Divides the first element in a sequential array of numbers by all other elements.
-        By default no-data values are ignored. Setting 'ignore_nodata' to False considers no-data values so that np.nan
-        is returned if any element is such a value.
+        Divides argument `x` by the argument `y` (`x / y`) and returns the computed result. No-data values are taken
+        into account so that None is returned if any element is such a value. The computations follow IEEE Standard 754.
+        Therefore, a division by zero results in ±infinity.
 
         Parameters
         ----------
-        data: np.array
-            An array of numbers.
-        ignore_nodata: bool, optional
-            Specifies if np.nan values are ignored or not (True is default).
-        dimension: int, optional
-            Dimension/axis of interest (0 is default).
-        extra_values: list, optional
-            Offers to subtract additional elements to the computed subtraction.
+        x : int or float
+            The dividend.
+        y : int or float
+            The divisor.
 
         Returns
         -------
-        np.array
-            The computed ratio of the sequence of numbers.
+        float or int :
+            The computed result.
 
-        Raises
-        ------
-        DivisorMissing
-            Is thrown when less than two values are given.
         """
-        n_extra = len(extra_values) if extra_values is not None else 0
-        n = eo_count(data, dimension=dimension, expression=True) + n_extra
-        if n < 2:
-            raise DivisorMissing
-
-        binary_fun = lambda a, b: np.divide(a, b)
-        nodata = None
-        if ignore_nodata:
-            nodata = 1.
-
-        data = binary_iterator(data, binary_fun, extra_values=extra_values, extra_idxs=extra_idxs,
-                               dimension=dimension, nodata=nodata)
-            
-        return data
+        return x / y if x is not None and y is not None else None
 
     @staticmethod
-    def exec_xar():
-        pass
+    def exec_np(x, y):
+        """
+        Divides argument `x` by the argument `y` (`x / y`) and returns the computed result. No-data values are taken
+        into account so that None is returned if any element is such a value. The computations follow IEEE Standard 754.
+        Therefore, a division by zero results in ±infinity.
+
+        Parameters
+        ----------
+        x : np.array or int or float
+            The dividend.
+        y : np.array or int or float
+            The divisor.
+
+        Returns
+        -------
+        np.array or float or int :
+            The computed result.
+
+        """
+        return x / y
+
+    @staticmethod
+    def exec_xar(x, y):
+        """
+        Divides argument `x` by the argument `y` (`x / y`) and returns the computed result. No-data values are taken
+        into account so that None is returned if any element is such a value. The computations follow IEEE Standard 754.
+        Therefore, a division by zero results in ±infinity.
+
+        Parameters
+        ----------
+        x : xr.DataArray or int or float
+            The dividend.
+        y : xr.DataArray or int or float
+            The divisor.
+
+        Returns
+        -------
+        xr.DataArray or float or int :
+            The computed result.
+
+        """
+        return x / y
 
     @staticmethod
     def exec_da():
         pass
-
-
-def binary_iterator(arr, binary_fun, extra_values=None, extra_idxs=None, dimension=0, nodata=None):
-    n_arr = arr.shape[dimension]
-    if extra_idxs is None and extra_values is not None:  # create default indizes according to the given length of 'extra_values'
-        extra_idxs = list(range(n_arr, n_arr + len(extra_values)))
-        n_extra = len(extra_idxs)
-    elif extra_idxs is not None and extra_values is not None:
-        n_extra = len(extra_idxs)
-    elif extra_idxs is None and extra_values is None:
-        n_extra = 0
-    else:
-        raise Exception("Only 'extra_idxs' is given. Please specify 'extra_values' in addition.")
-
-    n = n_arr + n_extra
-    data, arr_idx = index_arr_and_values(0, arr, 0, extra_values=extra_values, extra_idxs=extra_idxs,
-                                         dimension=dimension)
-    if nodata is not None:
-        data = replace_nodata_arr_or_value(data, nodata)
-    for i in range(1, n):
-        curr_data, arr_idx = index_arr_and_values(i, arr, arr_idx, extra_values=extra_values, extra_idxs=extra_idxs,
-                                                  dimension=dimension)
-        if nodata is not None:
-            curr_data = replace_nodata_arr_or_value(curr_data, nodata)
-
-        data = binary_fun(data, curr_data)
-
-    return data
-
-
-def index_arr_and_values(idx, arr, arr_idx, extra_values=None, extra_idxs=None, dimension=0):
-    if extra_idxs is not None and extra_values is not None:
-        if idx in extra_idxs:
-            return extra_values[extra_idxs.index(idx)], arr_idx
-        else:
-            arr_select = build_multi_dim_index(arr_idx, arr.shape, dimension)  # create index string
-            arr_idx += 1
-            return eval("arr[{}]".format(arr_select)), arr_idx
-    else:
-        arr_select = build_multi_dim_index(arr_idx, arr.shape, dimension)  # create index string
-        arr_idx += 1
-        return eval("arr[{}]".format(arr_select)), arr_idx
-
-
-def replace_nodata_arr_or_value(data, nodata):
-    if isinstance(data, np.ndarray):
-        data[np.isnan(data)] = nodata
-    else:
-        if np.isnan(data):
-            data = nodata
-
-    return data
 
 
 if __name__ == '__main__':

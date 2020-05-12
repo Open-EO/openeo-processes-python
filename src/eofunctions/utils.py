@@ -17,7 +17,7 @@ def eval_datatype(data):
     is_xar = isinstance(data, xarray.DataArray)
     is_dar = isinstance(data, dask.array.core.Array)
     is_num = isinstance(data, (int, float, str, np.integer, np.float))
-    is_datetime = isinstance(data, datetime.datetime)
+    is_datetime = isinstance(data, datetime)
     is_none = data is None
 
     if is_np:

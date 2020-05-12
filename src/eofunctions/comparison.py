@@ -8,7 +8,7 @@ import numpy as np
 import pandas as pd
 
 from eofunctions.utils import str2time
-from eofunctions.checks import eo_is_empty
+from eofunctions.checks import is_empty
 from eofunctions.checks import eo_is_valid
 
 # TODO: refactor all functions to class functions

@@ -1,12 +1,10 @@
-
-
 import numpy as np
 import pandas as pd
 
 from eofunctions.utils import build_multi_dim_index
 from eofunctions.utils import process
 from eofunctions.checks import eo_is_valid
-from eofunctions.checks import eo_is_empty
+from eofunctions.checks import is_empty
 
 from eofunctions.errors import IndexOutOfBounds
 
