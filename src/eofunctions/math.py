@@ -2857,6 +2857,98 @@ class Extrema:
         pass
 
 
+########################################################################################################################
+# Clip Process
+########################################################################################################################
+
+@process
+def clip():
+    """
+    Returns class instance of `Clip`.
+    For more details, please have a look at the implementations inside `Clip`.
+
+    Returns
+    -------
+    Clip :
+        Class instance implementing all 'clip' processes.
+
+    """
+    return Clip()
+
+
+class Clip:
+    """
+    Class implementing all 'clip' processes.
+
+    """
+
+    @staticmethod
+    def exec_num(x, min_x, max_x):
+        """
+        Clips a number between specified minimum and maximum values. A value larger than the maximal value will have
+        the maximal value, a value lower than minimal value will have the minimal value.
+        The no-data value None is passed through and therefore gets propagated.
+
+        Parameters
+        ----------
+        x : int or float
+            A number.
+        min_x : int or float
+            Minimum value. If `x` is lower than this value, the process will return the value of this parameter.
+        max_x : int or float
+            Maximum value. If `x` is greater than this value, the process will return the value of this parameter.
+
+        Returns
+        -------
+        float or int :
+            The value clipped to the specified range.
+
+        """
+        if x is None:
+            pass
+        elif x < min_x:
+            x = min_x
+        elif x > max_x:
+            x = max_x
+
+        return x
+
+    @staticmethod
+    def exec_np(x, min_x, max_x):
+        """
+        Clips a number between specified minimum and maximum values. A value larger than the maximal value will have
+        the maximal value, a value lower than minimal value will have the minimal value.
+        The no-data value None is passed through and therefore gets propagated.
+
+        Parameters
+        ----------
+        np.array : int or float
+            An array.
+        min_x : int or float
+            Minimum value. If `x` is lower than this value, the process will return the value of this parameter.
+        max_x : int or float
+            Maximum value. If `x` is greater than this value, the process will return the value of this parameter.
+
+        Returns
+        -------
+        np.array :
+            The value clipped to the specified range.
+
+        """
+        x = np.where(x < min_x, min_x, x)
+        x = np.where(x > max_x, max_x, x)
+
+        return x
+
+    @staticmethod
+    def exec_xar():
+        pass
+
+    @staticmethod
+    def exec_da():
+        pass
+
+
 # TODO: quantiles with nans are not working properly/really slow -> own implementation (e.g. like in SGRT)?
 ########################################################################################################################
 # Quantiles Process
@@ -3566,6 +3658,7 @@ class Sum:
     @staticmethod
     def exec_da():
         pass
+
 
 ########################################################################################################################
 # Product Process

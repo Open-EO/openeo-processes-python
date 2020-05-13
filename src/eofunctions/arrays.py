@@ -1,56 +1,74 @@
 import numpy as np
 import pandas as pd
 
-from eofunctions.utils import build_multi_dim_index
+from eofunctions.utils import create_slices
 from eofunctions.utils import process
-from eofunctions.checks import eo_is_valid
+from eofunctions.checks import is_valid
 from eofunctions.checks import is_empty
 
-from eofunctions.errors import IndexOutOfBounds
-
+from eofunctions.errors import ArrayElementNotAvailable
+from eofunctions.errors import ArrayElementParameterMissing
+from eofunctions.errors import ArrayElementParameterConflict
 
 ########################################################################################################################
 # Array Contains Process
 ########################################################################################################################
 
 @process
-def eo_array_contains():
+def array_contains():
     """
-    Checks if an element is contained in the data.
+    Returns class instance of `ArrayContains`.
+    For more details, please have a look at the implementations inside `ArrayContains`.
 
-    Notes
-    -----
-    Function is executed in decorator `process`.
+    Returns
+    -------
+    ArrayContains :
+        Class instance implementing all 'array_contains' processes.
 
     """
-    return EOArrayElement()
+    return ArrayContains()
 
 
-class EOArrayContains:
+class ArrayContains:
+    """
+    Class implementing all 'array_contains' processes.
+
+    """
 
     @staticmethod
     def exec_num():
         pass
 
+    # TODO: refine this implementation for larger arrays
     @staticmethod
-    def exec_np(data, element):
+    def exec_np(data, value):
         """
-        Checks if `element` is contained in `data`.
+        Checks whether the array specified for `data` contains the value specified in `value`.
+        Returns `True` if there's a match, otherwise `False`.
 
         Parameters
         ----------
         data : np.array
-            Input data as a numpy array.
-        element : object
-            Arbitrary array element.
+            Array to find the value in.
+        value : object
+            Value to find in `data`.
 
         Returns
         -------
         bool :
-            True if `element` is in `data`.
+            Returns `True` if the list contains the value, `False` otherwise.
+
+        Notes
+        -----
+        `in` is not working because this process checks only for the first level.
 
         """
-        return element in data
+        for elem in data:
+            if np.array(pd.isnull(value)).all() and np.isnan(elem):  # special handling for nan values
+                return True
+            elif np.array(elem == value).all():
+                return True
+        return False
 
     @staticmethod
     def exec_xar():
@@ -66,58 +84,76 @@ class EOArrayContains:
 ########################################################################################################################
 
 @process
-def eo_array_element():
+def array_element():
     """
-    Returns a data element corresponding to the given index.
+    Returns class instance of `ArrayElement`.
+    For more details, please have a look at the implementations inside `ArrayElement`.
 
-    Notes
-    -----
-    Function is executed in decorator `process`.
+    Returns
+    -------
+    ArrayElement :
+        Class instance implementing all 'array_element' processes.
 
     """
-    return EOArrayElement()
+    return ArrayElement()
 
 
-class EOArrayElement(object):
+class ArrayElement:
+    """
+    Class implementing all 'array_element' processes.
+
+    """
 
     @staticmethod
     def exec_num():
         pass
 
     @staticmethod
-    def exec_np(data, index=0, dimension=0, return_nodata=False):
+    def exec_np(data, index=0, label=None, dimension=0, return_nodata=False):
         """
-        Returns the element of `data` corresponding to the given index.
+        Returns the element with the specified index or label from the array. Either the parameter `index` or `label`
+        must be specified, otherwise the `ArrayElementParameterMissing` exception is thrown. If both parameters are set
+        the `ArrayElementParameterConflict` exception is thrown.
 
         Parameters
         ----------
         data : np.array
-            Input data as a numpy array.
-        index : int
-            Array index.
+            An array.
+        index : int, optional
+            The zero-based index of the element to retrieve (default is 0).
+        label : int or str, optional
+            The label of the element to retrieve.
+        dimension : int, optional
+            Defines the index dimension (default is 0).
         return_nodata : bool, optional
-            If true (default is false), np.nan will be returned if the element cannot be found. If false and the
-            element cannot be found, an IndexOutOfBounds error will be raised.
+            By default this process throws an `ArrayElementNotAvailable` exception if the index or label is invalid.
+            If you want to return np.nan instead, set this flag to `True`.
 
         Returns
         -------
-        count : int
-            Count of the data.
+        object
+            The value of the requested element.
 
         Raises
         ------
-        IndexOutOfBounds
-            If the element specified by the index cannot be found and `return_nodata` is false.
+        ArrayElementNotAvailable :
+            The array has no element with the specified index or label.
+        ArrayElementParameterMissing :
+            Either `index` or `labels` must be set.
+        ArrayElementParameterConflict :
+            Only `index` or `labels` allowed to be set.
 
         """
+        ArrayElement._check_input(index, label)
+
         if index >= data.shape[dimension]:
             if not return_nodata:
-                raise IndexOutOfBounds()
+                raise ArrayElementNotAvailable()
             else:
                 array_elem = np.nan
         else:
-            string_select = build_multi_dim_index("index", data.shape, dimension)  # create index string
-            array_elem = eval("data[{}]".format(string_select))  # select the data according to the index string
+            idx = create_slices(index, axis=dimension, n_axes=len(data.shape))
+            array_elem = data[idx]
 
         return array_elem
 
@@ -129,59 +165,114 @@ class EOArrayElement(object):
     def exec_da():
         pass
 
+    @staticmethod
+    def _check_input(index, label):
+        """
+        Checks if `index` and `label` are given correctly.
+
+        Either the parameter `index` or `label` must be specified, otherwise the `ArrayElementParameterMissing`
+        exception is thrown. If both parameters are set the `ArrayElementParameterConflict `exception is thrown.
+
+        Parameters
+        ----------
+        index : int, optional
+            The zero-based index of the element to retrieve (default is 0).
+        label : int or str, optional
+            The label of the element to retrieve.
+
+        Raises
+        ------
+        ArrayElementParameterMissing :
+            Either `index` or `labels` must be set.
+        ArrayElementParameterConflict :
+            Only `index` or `labels` allowed to be set.
+
+        """
+        if (index is not None) and (label is not None):
+            raise ArrayElementParameterConflict()
+
+        if index is None and label is None:
+            raise ArrayElementParameterMissing()
+
 
 ########################################################################################################################
 # Count Process
 ########################################################################################################################
 
 @process
-def eo_count():
-    return EOCount()
+def count():
+    """
+    Returns class instance of `Count`.
+    For more details, please have a look at the implementations inside `Count`.
+
+    Returns
+    -------
+    Count :
+        Class instance implementing all 'count' processes.
+
+    """
+    return Count()
 
 
-class EOCount(object):
-    def __init__(self):
-        pass
+class Count:
+    """
+    Class instance implementing all 'count' processes.
+
+    """
 
     @staticmethod
     def exec_num():
         pass
 
     @staticmethod
-    def exec_np(data, dimension=0, expression=None):
+    def exec_np(data, condition=None, context=None, dimension=0):
         """
-        Returns the first element of the given array along a specific dimension. If np.nan values are ignored, the first
-        valid element is taken.
+        Gives the number of elements in an array that matches the specified condition.
+        Remarks:
+            - Counts the number of valid elements by default (condition is set to None).
+              A valid element is every element for which is_valid returns True.
+            - To count all elements in a list set the `condition` parameter to `True`.
 
         Parameters
         ----------
-        data: np.array
-            Input data as a numpy array.
-        dimension: int, optional
-            Dimension/axis of interest (0 is default).
-        expression: obj, optional
-            Specifies how the data should be counted.
-                - It can be a string, which is then translated to a function leading to an nary boolean output
-                (True's are counted).
-                - It can be a boolean and true, then all elements are counted.
-                - It can be a callable function leading to an nary boolean output (True's are counted).
-                - For anything else only the valid elements in 'data' are counted.
+        data : np.array
+            An array.
+        condition : obj, optional
+            A condition consists of one ore more processes, which in the end return a boolean value.
+            It is evaluated against each element in the array. An element is counted only if the condition
+            returns `True`. Defaults to count valid elements in an array (see is_valid). Setting this parameter
+            to `True` counts all elements in the array. The following arguments are valid:
+                - None : Counts all valid elements, i.e. `is_valid` must yield `True`.
+                - `True` : Counts all elements in the array along the specified dimension.
+                - object : The following parameters are passed to the process:
+                    - `x` : The value of the current element being processed.
+                    - `context` : Additional data passed by the user.
+        context : dict, optional
+            Additional data/keyword arguments to be passed to the condition.
+        dimension : int, optional
+            Defines the dimension along to count the elements (default is 0).
 
         Returns
         -------
         count: int
             Count of the data.
 
+        Notes
+        -----
+        The condition/expression must be able to deal with NumPy arrays.
+
         """
-        if expression == True:  # explicit check needed
+        if condition is None:
+            count = np.sum(is_valid(data, reduce=False), axis=dimension)
+        elif condition is True: # explicit check needed
             count = data.shape[dimension]
-        elif isinstance(expression, str):
-            count = np.sum(eval(expression), axis=dimension)
-        elif callable(expression):
-            data = expression(data)
+        elif callable(condition):
+            context = context if context is not None else {}
+            data = condition(data, **context)
             count = np.sum(data, axis=dimension)
         else:
-            count = np.sum(eo_is_valid(data, reduce=False), axis=dimension)
+            err_msg = "Data type of condition is not supported."
+            raise ValueError(err_msg)
 
         return count
 
@@ -199,13 +290,25 @@ class EOCount(object):
 ########################################################################################################################
 
 @process
-def eo_first():
-    return EOFirst()
+def first():
+    """
+    Returns class instance of `First`.
+    For more details, please have a look at the implementations inside `First`.
+
+    Returns
+    -------
+    First :
+        Class instance implementing all 'first' processes.
+
+    """
+    return First()
 
 
-class EOFirst(object):
-    def __init__(self):
-        pass
+class First:
+    """
+    Class implementing all 'first' processes.
+
+    """
 
     @staticmethod
     def exec_num():
@@ -214,35 +317,35 @@ class EOFirst(object):
     @staticmethod
     def exec_np(data, dimension=0, ignore_nodata=True):
         """
-        Returns the first element of the given array along a specific dimension. If np.nan values are ignored, the first
-        valid element is taken.
+        Gives the first element of an array. For an empty array np.nan is returned.
 
         Parameters
         ----------
-        data: np.array
-            Input data as a numpy array.
-        dimension: int, optional
-            Dimension/axis of interest (0 is default).
-        ignore_nodata: bool, optional
-            Specifies if np.nan values are ignored or not (True is default).
+        data : np.array
+            An array. An empty array resolves always with np.nan.
+        ignore_nodata : bool, optional
+            Indicates whether no-data values are ignored or not. Ignores them by default (=True).
+            Setting this flag to False considers no-data values so that np.nan is returned if any value is such a value.
+        dimension : int, optional
+            Defines the dimension to select the first element along (default is 0).
 
         Returns
         -------
-        first_elem: object
+        np.array :
+            The first element of the input array.
 
         """
-        first_elem = np.nan  # the default value of the first element
-        if not eo_is_empty(data):
-            dims = len(data.shape)
-            if ignore_nodata:  # skip np.nan values
-                nan_mask = ~pd.isnull(data)  # create mask for valid values (not np.nan)
-                first_elem_idx = np.argmax(nan_mask, axis=dimension)  # along the chosen dimension, the index of the first valid element will be returned
-                string_select = build_multi_dim_index("first_elem_idx", data.shape, dimension)  # create index string
-                first_elem = eval("data[{}]".format(string_select))  # select the data according to the index string
-            else:  # take the first element, no matter np.nan values are in the array
-                strings_select = [":"] * dims
-                strings_select[dimension] = "0"  # the index string has a "0" at the place of the chosen dimension
-                first_elem = eval("data[{}]".format(",".join(strings_select)))  # select the data according to the index string
+        if is_empty(data):
+            return np.nan
+
+        n_dims = len(data.shape)
+        if ignore_nodata:  # skip np.nan values
+            nan_mask = ~pd.isnull(data)  # create mask for valid values (not np.nan)
+            idx_first = np.argmax(nan_mask, axis=dimension)
+            first_elem = np.take_along_axis(data, np.expand_dims(idx_first, axis=dimension), axis=dimension)
+        else:  # take the first element, no matter np.nan values are in the array
+            idx_first = create_slices(0, axis=dimension, n_axes=n_dims)
+            first_elem = data[idx_first]
 
         return first_elem
 
@@ -260,13 +363,25 @@ class EOFirst(object):
 ########################################################################################################################
 
 @process
-def eo_last():
-    return EOLast()
+def last():
+    """
+    Returns class instance of `Last`.
+    For more details, please have a look at the implementations inside `Last`.
+
+    Returns
+    -------
+    Last :
+        Class instance implementing all 'last' processes.
+
+    """
+    return Last()
 
 
-class EOLast(object):
-    def __init__(self):
-        pass
+class Last:
+    """
+    Class implementing all 'last' processes.
+
+    """
 
     @staticmethod
     def exec_num():
@@ -275,39 +390,34 @@ class EOLast(object):
     @staticmethod
     def exec_np(data, dimension=0, ignore_nodata=True):
         """
-        Returns the last element of the given array along a specific dimension. If np.nan values are ignored, the last
-        valid element is taken.
+        Gives the last element of an array. For an empty array np.nan is returned.
 
         Parameters
         ----------
-        data: np.array
-            Input data as a numpy array.
-        dimension: int, optional
-            Dimension/axis of interest (0 is default).
-        ignore_nodata: bool, optional
-            Specifies if np.nan values are ignored or not (True is default).
+        data : np.array
+            An array. An empty array resolves always with np.nan.
+        ignore_nodata : bool, optional
+            Indicates whether no-data values are ignored or not. Ignores them by default (=True).
+            Setting this flag to False considers no-data values so that np.nan is returned if any value is such a value.
+        dimension : int, optional
+            Defines the dimension to select the last element along (default is 0).
 
         Returns
         -------
-        last_elem: object
+        np.array :
+            The last element of the input array.
 
-        Notes
-        -----
-        - after flipping, eo first could be called. But this is not done, since some operations will then be executed twice
         """
-        last_elem = np.nan  # the default value of the last element
-        if not eo_is_empty(data):
-            if ignore_nodata:  # skip np.nan values
-                data = np.flip(data, axis=dimension)  # flip array so that one can search for the first element
-                nan_mask = ~pd.isnull(data)  # create mask for valid values (not np.nan)
-                first_elem_idx = np.argmax(nan_mask, axis=dimension)  # along the chosen dimension, the index of the first valid element will be returned
-                string_select = build_multi_dim_index("first_elem_idx", data.shape, dimension)  # create index string
-                last_elem = eval("data[{}]".format(string_select))  # select the data according to the index string
-            else:  # take the last element, no matter np.nan values are in the array
-                dims = len(data.shape)
-                strings_select = [":"] * dims
-                strings_select[dimension] = "-1"  # the index string has a "-1" at the place of the chosen dimension
-                last_elem = eval("data[{}]".format(",".join(strings_select)))  # select the data according to the index string
+        if is_empty(data):
+            return np.nan
+
+        n_dims = len(data.shape)
+        if ignore_nodata:  # skip np.nan values
+            data = np.flip(data, axis=dimension)  # flip data to retrieve the first valid element (thats the only way it works with argmax)
+            last_elem = first(data, ignore_nodata=ignore_nodata, dimension=dimension)
+        else:  # take the first element, no matter np.nan values are in the array
+            idx_last = create_slices(-1, axis=dimension, n_axes=n_dims)
+            last_elem = data[idx_last]
 
         return last_elem
 
@@ -325,14 +435,26 @@ class EOLast(object):
 ########################################################################################################################
 
 @process
-def eo_order():
-    return EOOrder()
+def order():
+    """
+    Returns class instance of `Order`.
+    For more details, please have a look at the implementations inside `Order`.
+
+    Returns
+    -------
+    Order :
+        Class instance implementing all 'order' processes.
+
+    """
+    return Order()
 
 
-# TODO: can nodata=False algorithm be simplified?
-class EOOrder(object):
-    def __init__(self):
-        pass
+# TODO: can nodata algorithm be simplified/enhanced?
+class Order:
+    """
+    Class implementing all 'order' processes.
+
+    """
 
     @staticmethod
     def exec_num():
@@ -341,60 +463,66 @@ class EOOrder(object):
     @staticmethod
     def exec_np(data, dimension=0, asc=True, nodata=None):
         """
-        Returns the ascending (default) or descending order of the given data.
+        Computes a permutation which allows rearranging the data into ascending or descending order.
+        In other words, this process computes the ranked (sorted) element positions in the original list.
+        Remarks:
+            - The positions in the result are zero-based.
+            - Ties will be left in their original ordering.
 
         Parameters
         ----------
-        data: np.array
-            Input data as a numpy array.
-        dimension: int, optional
-            Dimension/axis of interest (0 is default).
-        asc: bool, optional
-            If true, the order will be ascending, if false the order will be descending (True is default).
-        nodata: obj, optional
-            Specifies if np.nan values should be removed (nodata=None), put first (nodata=True) or put last
-            (nodata=False) in the order.
+        data : np.array
+            An array to compute the order for.
+        dimension : int, optional
+            Defines the dimension to order along (default is 0).
+        asc : bool, optional
+            The default sort order is ascending, with smallest values first. To sort in reverse (descending) order,
+            set this parameter to `False`.
+        nodata : obj, optional
+            Controls the handling of no-data values (np.nan). By default they are removed. If `True`, missing values
+            in the data are put last; if `False`, they are put first.
 
         Returns
         -------
-        permutation_idxs: np.array
-            Order of the data.
+        np.array :
+            The computed permutation.
 
         Notes
         -----
         - the case with nodata=False is complicated, since a simple nan masking destroys the structure of the array
-        - due to the flipping the order of the np.nan values is wrong, but this is ignored, since this order should not be relevant
+        - due to the flipping, the order of the np.nan values is wrong, but this is ignored, since this order should
+          not be relevant
         """
+
         if asc:
             permutation_idxs = np.argsort(data, kind='mergesort', axis=dimension)
         else:  # [::-1] not possible
             permutation_idxs = np.argsort(-data, kind='mergesort', axis=dimension)  # to get the indizes in descending order, the sign of the data is changed
 
         if nodata is None:  # ignore np.nan values
-            string_select = build_multi_dim_index("permutation_idxs", data.shape, dimension)
-            data_sorted = eval("data[{}]".format(string_select))  # sort the data according to the order computed before to get the np.nan values at the same position
-            return permutation_idxs[~np.isnan(data_sorted)]  # mask the np.nan values given in the sorted data in the order
-        elif nodata == False:  # put location/index of np.nan values first
-            # get np.nan mask from sorted data
-            string_select = build_multi_dim_index("permutation_idxs", data.shape, dimension)
-            data_sorted = eval("data[{}]".format(string_select))
-            nan_idxs = pd.isnull(data_sorted)
+            # sort the original data first, to get correct position of no data values
+            sorted_data = data[permutation_idxs]
+            return permutation_idxs[~pd.isnull(sorted_data)]
+        elif nodata is False:  # put location/index of np.nan values first
+            # sort the original data first, to get correct position of no data values
+            sorted_data = data[permutation_idxs]
+            nan_idxs = pd.isnull(sorted_data)
 
-            # get np.nan mask from sorted and flipped data
-            string_select_flip = build_multi_dim_index("permutation_idxs_flip", data.shape, dimension)
+            # flip permutation and nan mask
             permutation_idxs_flip = np.flip(permutation_idxs, axis=dimension)
-            data_sorted_flip = eval("data[{}]".format(string_select_flip))
-            nan_idxs_flip = pd.isnull(data_sorted_flip)
+            nan_idxs_flip = np.flip(nan_idxs, axis=dimension)
 
             # flip causes the nan.values to be first, however the order of all other values is also flipped
-            # therefore the non np.nan values (i.e. the wrong flipped order) is replaced by the right order given by the original permutation values
+            # therefore the non np.nan values (i.e. the wrong flipped order) is replaced by the right order given by
+            # the original permutation values
             permutation_idxs_flip[~nan_idxs_flip] = permutation_idxs[~nan_idxs]
 
             return permutation_idxs_flip
-        elif nodata == True:  # default argsort behaviour, np.nan values are put last
+        elif nodata is True:  # default argsort behaviour, np.nan values are put last
             return permutation_idxs
         else:
-            raise Exception("Status '{}' of argument 'nodata' unknown".format(nodata))
+            err_msg = "Data type of 'nodata' argument is not supported."
+            raise Exception(err_msg)
 
     @staticmethod
     def exec_xar():
@@ -404,45 +532,57 @@ class EOOrder(object):
     def exec_da():
         pass
 
+
 ########################################################################################################################
 # Rearrange Process
 ########################################################################################################################
 
 @process
-def eo_rearrange():
-    return EORearrange()
+def rearrange():
+    """
+    Returns class instance of `Rearrange`.
+    For more details, please have a look at the implementations inside `Rearrange`.
+
+    Returns
+    -------
+    Rearrange :
+        Class instance implementing all 'rearrange' processes.
+
+    """
+    return Rearrange()
 
 
-class EORearrange(object):
-    def __init__(self):
-        pass
+class Rearrange:
+    """
+    Class implementing all 'rearrange' processes.
+
+    """
 
     @staticmethod
     def exec_num():
         pass
 
     @staticmethod
-    def exec_np(data, order, dimension=0):
+    def exec_np(data, order):
         """
-        Returns the ascending (default) or descending order of the given data.
+        Rearranges an array based on a permutation, i.e. a ranked list of element positions in the original list.
+        The positions must be zero-based.
 
         Parameters
         ----------
-        data: np.array
-            Input data as a numpy array.
-        order: np.array
-            Order in which 'data' should be sorted.
-        dimension: int, optional
-            Dimension/axis of interest (0 is default).
+        data : np.array
+            The array to rearrange.
+        order : np.array
+            The permutation used for rearranging.
 
         Returns
         -------
-        np.array
-            Rearranged input data.
+        np.array :
+            The rearranged array.
 
         """
-        string_select = build_multi_dim_index("order", data.shape, dimension)
-        return eval("data[{}]".format(string_select))
+
+        return data[order]
 
     @staticmethod
     def exec_xar():
@@ -458,14 +598,26 @@ class EORearrange(object):
 ########################################################################################################################
 
 @process
-def eo_sort():
-    return EOSort()
+def sort():
+    """
+    Returns class instance of `Sort`.
+    For more details, please have a look at the implementations inside `Sort`.
+
+    Returns
+    -------
+    Sort :
+        Class instance implementing all 'sort' processes.
+
+    """
+    return Sort()
 
 
 # TODO: can nodata=False algorithm be simplified?
-class EOSort(object):
-    def __init__(self):
-        pass
+class Sort:
+    """
+    Class implementing all 'sort' processes.
+
+    """
 
     @staticmethod
     def exec_num():
@@ -474,35 +626,33 @@ class EOSort(object):
     @staticmethod
     def exec_np(data, dimension=0, asc=True, nodata=None):
         """
-        Returns the data in ascending (default) or descending order.
+        Sorts an array into ascending (default) or descending order.
+        Remarks:
+            - Ties will be left in their original ordering.
 
         Parameters
         ----------
-        data: np.array
-            Input data as a numpy array.
-        dimension: int, optional
-            Dimension/axis of interest (0 is default).
-        asc: bool, optional
-            If true, the order will be ascending, if false the order will be descending (True is default).
-        nodata: obj, optional
-            Specifies if np.nan values should be removed (nodata=None), put first (nodata=True) or put last
-            (nodata=False) in the sorted data.
+        data : np.array
+            An array with data to sort.
+        dimension : int, optional
+            Defines the dimension to sort along (default is 0).
+        asc : bool, optional
+            The default sort order is ascending, with smallest values first. To sort in reverse (descending) order,
+            set this parameter to `False`.
+        nodata : obj, optional
+            Controls the handling of no-data values (np.nan). By default they are removed. If `True`, missing values
+            in the data are put last; if `False`, they are put first.
 
         Returns
         -------
-        np.array
-            Sorted input data.
-
-        Notes
-        -----
-        - eo_rearrange(data, eo_order(data, dimension=dimension, asc=asc, nodata=nodata)) could be used, but is
-        probably slower than sorting the array directly
+        np.array :
+            The sorted array.
 
         """
         if asc:
             data_sorted = np.sort(data, axis=dimension)
         else:  # [::-1] not possible
-            data_sorted = -np.sort(-data, axis=dimension)  # to get the indizes in descending order, the sign of the data is changed
+            data_sorted = -np.sort(-data, axis=dimension)  # to get the indexes in descending order, the sign of the data is changed
 
         if nodata is None:  # ignore np.nan values
             nan_idxs = pd.isnull(data_sorted)
@@ -516,58 +666,8 @@ class EOSort(object):
         elif nodata == True:  # default sort behaviour, np.nan values are put last
             return data_sorted
         else:
-            raise Exception("Status '{}' of argument 'nodata' unknown".format(nodata))
-
-    @staticmethod
-    def exec_xar():
-        pass
-
-    @staticmethod
-    def exec_da():
-        pass
-
-
-########################################################################################################################
-# Clip Process
-########################################################################################################################
-
-@process
-def eo_clip():
-    return EOClip()
-
-
-class EOClip(object):
-    def __init__(self):
-        pass
-
-    @staticmethod
-    def exec_num():
-        pass
-
-    @staticmethod
-    def exec_np(data, min, max):
-        """
-        Returns the clipped input data, i.e. all values below 'min' are set to 'min' and all values above 'max' are set
-        to 'max'.
-
-        Parameters
-        ----------
-        data: np.array
-            Input data as a numpy array.
-        min: float, int
-            Minimum value allowed to be in the array.
-        max: float, int
-            Maximum value allowed to be in the array.
-
-        Returns
-        -------
-        np.array
-            Clipped input data.
-        """
-        data = np.where(data < min, min, data)
-        data = np.where(data > max, max, data)
-
-        return data
+            err_msg = "Data type of 'nodata' argument is not supported."
+            raise Exception(err_msg)
 
     @staticmethod
     def exec_xar():

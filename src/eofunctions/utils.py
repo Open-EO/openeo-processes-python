@@ -82,32 +82,30 @@ def list2nparray(x):
     return x
 
 
-def build_multi_dim_index(index, shape, axis):
+def create_slices(index, axis=0, n_axes=1):
+    """
+    Creates a multidimensional slice index.
+
+    Parameters
+    ----------
+    index : int
+        The zero-based index of the element to retrieve (default is 0).
+    axis : int, optional
+        Axis of the given index (default is 0).
+    n_axes : int, optional
+        Number of axes (default is 1).
+
+    Returns
+    -------
+    tuple of slice:
+        Tuple of index slices.
+
     """
 
-    """
-    slices = [slice(None),]
+    slices = [slice(None)] * n_axes
+    slices[axis] = index
 
-
-    # dims = len(shape)
-    # index_name = str(index_name)
-    # expand_dim_exprs = [["None"] * (dims - 1)] * (dims - 1)
-    # for i, elem in enumerate(expand_dim_exprs):
-    #     elem_cp = copy.deepcopy(elem)
-    #     elem_cp[i] = ":"
-    #     expand_dim_exprs[i] = ",".join(elem_cp)
-    # expand_dim_exprs.insert(axis, None)
-    # strings_select = []
-    # for i, n in enumerate(shape):
-    #     if i == axis:
-    #         strings_select.append(index_name)
-    #     else:
-    #         strings_select.append("np.arange({})[{}]".format(n, expand_dim_exprs[i]))
-    #
-    # return ",".join(strings_select)
-
-
-
+    return tuple(slices)
 
 
 def str2time(string, allow_24=False):
@@ -158,3 +156,6 @@ def str2time(string, allow_24=False):
         date_time += timedelta(hours=1)
 
     return date_time
+
+if __name__ == '__main__':
+    create_slices(0, (3, 4, 5), 0)

@@ -98,13 +98,12 @@ class EOIsNan(object):
 ########################################################################################################################
 
 @process
-def eo_is_valid():
-    return EOIsValid()
+def is_valid():
+    return IsValid()
 
 
-class EOIsValid(object):
-    def __init__(self):
-        pass
+class IsValid(object):
+
 
     @staticmethod
     def exec_num(data):
@@ -146,7 +145,7 @@ class EOIsValid(object):
         -------
         bool, np.array
         """
-        if eo_is_empty(data):
+        if is_empty(data):
             return False
         else:
             is_valid = (~pd.isnull(data) & (data != np.inf))

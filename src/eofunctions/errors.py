@@ -14,41 +14,28 @@ class QuantilesParameterConflict(Exception):
         return self.message
 
 
-class SummandMissing(Exception):
+class ArrayElementParameterMissing(Exception):
     def __init__(self):
-        self.message = "Addition requires at least two numbers."
+        self.message = "The process 'array_element' requires either the 'index' or 'labels' parameter to be set."
 
     def __str__(self):
         return self.message
 
 
-class SubtrahendMissing(Exception):
+class ArrayElementParameterConflict(Exception):
     def __init__(self):
-        self.message = "Subtraction requires at least two numbers (a minuend and one or more subtrahends)."
+        self.message = "The process 'array_element' only allows that either the 'index' or the 'labels' parameter is " \
+                       "set."
 
     def __str__(self):
         return self.message
 
 
-class MultiplicandMissing(Exception):
+class ArrayElementNotAvailable(Exception):
     def __init__(self):
-        self.message = "Multiplication requires at least two numbers."
+        self.message = "The array has no element with the specified index or label."
 
     def __str__(self):
         return self.message
 
 
-class DivisorMissing(Exception):
-    def __init__(self):
-        self.message = "Division requires at least two numbers (a dividend and one or more divisors)."
-
-    def __str__(self):
-        return self.message
-
-
-class IndexOutOfBounds(KeyError):
-    def __init__(self):
-        self.message = "The array has no element with the specified index."
-
-    def __str__(self):
-        return self.message

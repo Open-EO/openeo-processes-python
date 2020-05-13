@@ -1,3 +1,8 @@
+"""
+Most tests are in alignment with:
+https://openeo.org/documentation/1.0/processes.html
+"""
+
 import unittest
 import numpy as np
 from copy import deepcopy
@@ -219,8 +224,21 @@ class MathTester(unittest.TestCase):
         """ Tests `extrema` function. """
         self.assertListEqual(eof.extrema([1, 0, 3, 2]), [0, 3])
         self.assertListEqual(eof.extrema([5, 2.5, np.nan, -0.7]), [-0.7, 5])
-        self.assertListEqual(eof.extrema([1, 0, 3, np.nan, 2], ignore_nodata=False), [np.nan, np.nan])
-        self.assertListEqual(eof.extrema([]), [np.nan, np.nan])
+        assert np.isclose(eof.extrema([1, 0, 3, np.nan, 2], ignore_nodata=False), [np.nan, np.nan],
+                          equal_nan=True).all()
+        assert np.isclose(eof.extrema([]), [np.nan, np.nan], equal_nan=True).all()
+
+    def test_clip(self):
+        """ Tests `clip` function. """
+        assert eof.clip(-5, min_x=-1, max_x=1) == -1
+        assert eof.clip(10.001, min_x=1, max_x=10) == 10
+        assert eof.clip(0.000001, min_x=0, max_x=0.02) == 0.000001
+        assert eof.clip(None, min_x=0, max_x=1) is None
+
+        # test array clipping
+        assert np.isclose(eof.clip([-2, -1, 0, 1, 2], min_x=-1, max_x=1), [-1, -1, 0, 1, 1], equal_nan=True).all()
+        assert np.isclose(eof.clip([-0.1, -0.001, np.nan, 0, 0.25, 0.75, 1.001, np.nan], min_x=0, max_x=1),
+                          [0, 0, np.nan, 0, 0.25, 0.75, 1, np.nan], equal_nan=True).all()
 
     def test_quantiles(self):
         """ Tests `quantiles` function. """
@@ -241,30 +259,30 @@ class MathTester(unittest.TestCase):
     def test_cummin(self):
         """ Tests `cummin` function. """
         self.assertListEqual(eof.cummin([5, 3, 1, 3, 5]).tolist(), [5, 3, 1, 1, 1])
-        self.assertListEqual(eof.cummin([5, 3, np.nan, 1, 5]).tolist(), [5, 3, np.nan, 1, 1])
-        self.assertListEqual(eof.cummin([5, 3, np.nan, 1, 5], ignore_nodata=False).tolist(),
-                             [5, 3, np.nan, np.nan, np.nan])
+        assert np.isclose(eof.cummin([5, 3, np.nan, 1, 5]), [5, 3, np.nan, 1, 1], equal_nan=True).all()
+        assert np.isclose(eof.cummin([5, 3, np.nan, 1, 5], ignore_nodata=False),
+                          [5, 3, np.nan, np.nan, np.nan], equal_nan=True).all()
 
     def test_cummax(self):
         """ Tests `cummax` function. """
         self.assertListEqual(eof.cummax([1, 3, 5, 3, 1]).tolist(), [1, 3, 5, 5, 5])
-        self.assertListEqual(eof.cummax([1, 3, np.nan, 5, 1]).tolist(), [1, 3, np.nan, 5, 5])
-        self.assertListEqual(eof.cummax([1, 3, np.nan, 5, 1], ignore_nodata=False).tolist(),
-                             [1, 3, np.nan, np.nan, np.nan])
+        assert np.isclose(eof.cummax([1, 3, np.nan, 5, 1]), [1, 3, np.nan, 5, 5], equal_nan=True).all()
+        assert np.isclose(eof.cummax([1, 3, np.nan, 5, 1], ignore_nodata=False),
+                          [1, 3, np.nan, np.nan, np.nan], equal_nan=True).all()
 
     def test_cumproduct(self):
         """ Tests `cumproduct` function. """
         self.assertListEqual(eof.cumproduct([1, 3, 5, 3, 1]).tolist(), [1, 3, 15, 45, 45])
-        self.assertListEqual(eof.cumproduct([1, 2, 3, np.nan, 3, 1]).tolist(), [1, 2, 6, np.nan, 18, 18])
-        self.assertListEqual(eof.cumproduct([1, 2, 3, np.nan, 3, 1], ignore_nodata=False).tolist(),
-                             [1, 2, 6, np.nan, np.nan, np.nan])
+        assert np.isclose(eof.cumproduct([1, 2, 3, np.nan, 3, 1]), [1, 2, 6, np.nan, 18, 18], equal_nan=True).all()
+        assert np.isclose(eof.cumproduct([1, 2, 3, np.nan, 3, 1], ignore_nodata=False),
+                          [1, 2, 6, np.nan, np.nan, np.nan], equal_nan=True).all()
 
     def test_cumsum(self):
         """ Tests `cumsum` function. """
         self.assertListEqual(eof.cumsum([1, 3, 5, 3, 1]).tolist(), [1, 4, 9, 12, 13])
-        self.assertListEqual(eof.cumsum([1, 3, np.nan, 3, 1]).tolist(), [1, 4, np.nan, 7, 8])
-        self.assertListEqual(eof.cumsum([1, 3, np.nan, 3, 1], ignore_nodata=False).tolist(),
-                             [1, 4, np.nan, np.nan, np.nan])
+        assert np.isclose(eof.cumsum([1, 3, np.nan, 3, 1]), [1, 4, np.nan, 7, 8], equal_nan=True).all()
+        assert np.isclose(eof.cumsum([1, 3, np.nan, 3, 1], ignore_nodata=False),
+                          [1, 4, np.nan, np.nan, np.nan], equal_nan=True).all()
 
     def test_sum(self):
         """ Tests `sum` function. """

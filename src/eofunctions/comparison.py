@@ -9,7 +9,7 @@ import pandas as pd
 
 from eofunctions.utils import str2time
 from eofunctions.checks import is_empty
-from eofunctions.checks import eo_is_valid
+from eofunctions.checks import is_valid
 
 # TODO: refactor all functions to class functions
 
@@ -90,7 +90,7 @@ def eo_neq(x, y, delta=None, case_sensitive=True):
 
 
 def eo_gt(x, y):
-    if not eo_is_valid(x) or not eo_is_valid(y):
+    if not is_valid(x) or not is_valid(y):
         return np.nan
     elif (type(x) == str) and (type(y) == str):
         x_time = str2time(x)
