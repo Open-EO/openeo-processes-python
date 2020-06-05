@@ -53,6 +53,26 @@ class ArrayTester(unittest.TestCase):
         assert eof.count([False, np.nan], condition=True) == 2
         assert eof.count([0, 1, 2, 3, 4, 5, np.nan], condition=eof.eo_gt, context={'y': 2})
 
+    #TODO: add test
+    def test_array_apply(self):
+        """ Tests `array_apply` function. """
+        pass
+
+    # TODO: add test
+    def test_array_filter(self):
+        """ Tests `array_filter` function. """
+        pass
+
+    # TODO: add test
+    def test_array_find(self):
+        """ Tests `array_find` function. """
+        pass
+
+    # TODO: add test
+    def test_array_labels(self):
+        """ Tests `array_labels` function. """
+        pass
+
     def test_first(self):
         """ Tests `first` function. """
         assert eof.first([1, 0, 3, 2]) == 1

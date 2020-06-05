@@ -3,7 +3,7 @@ import xarray_extras as xar_addons
 import builtins
 
 from eofunctions.utils import process
-from eofunctions.checks import is_empty
+from eofunctions.comparison import is_empty
 
 from eofunctions.errors import QuantilesParameterConflict
 from eofunctions.errors import QuantilesParameterMissing
@@ -38,77 +38,6 @@ def pi():
 
     """
     return np.pi
-
-
-########################################################################################################################
-# Not Process
-########################################################################################################################
-
-@process
-def not_():
-    """
-    Returns class instance of `Not`.
-    For more details, please have a look at the implementations inside `Not`.
-
-    Returns
-    -------
-    Not
-        Class instance implementing all 'not' processes.
-
-    """
-    return Not()
-
-
-class Not:
-    """
-    Class implementing all 'not' processes.
-    """
-
-    @staticmethod
-    def exec_num(x):
-        """
-        Inverts a boolean so that True gets False and False gets True.
-        The no-data value None is passed through and therefore gets propagated.
-
-        Parameters
-        ----------
-        x : bool
-            Boolean value to invert.
-
-        Returns
-        -------
-        bool :
-            Inverted boolean value.
-
-        """
-        return not x if x is not None else x
-
-    @staticmethod
-    def exec_np(x):
-        """
-        Inverts booleans so that True/1 gets False/0 and False/0 gets True/1.
-        The no-data value np.nan is passed through and therefore gets propagated.
-
-        Parameters
-        ----------
-        x : np.array
-            Boolean values to invert.
-
-        Returns
-        -------
-        np.array :
-            Inverted boolean values.
-
-        """
-        return ~x
-
-    @staticmethod
-    def exec_xar():
-        pass
-
-    @staticmethod
-    def exec_da():
-        pass
 
 
 ########################################################################################################################

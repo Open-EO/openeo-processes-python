@@ -3,8 +3,8 @@ import pandas as pd
 
 from eofunctions.utils import create_slices
 from eofunctions.utils import process
-from eofunctions.checks import is_valid
-from eofunctions.checks import is_empty
+from eofunctions.comparison import is_valid
+from eofunctions.comparison import is_empty
 
 from eofunctions.errors import ArrayElementNotAvailable
 from eofunctions.errors import ArrayElementParameterMissing
@@ -263,7 +263,7 @@ class Count:
 
         """
         if condition is None:
-            count = np.sum(is_valid(data, reduce=False), axis=dimension)
+            count = np.sum(is_valid(data), axis=dimension)
         elif condition is True: # explicit check needed
             count = data.shape[dimension]
         elif callable(condition):
@@ -275,6 +275,287 @@ class Count:
             raise ValueError(err_msg)
 
         return count
+
+    @staticmethod
+    def exec_xar():
+        pass
+
+    @staticmethod
+    def exec_da():
+        pass
+
+
+########################################################################################################################
+# Array Apply Process
+########################################################################################################################
+
+@process
+def array_apply():
+    """
+    Returns class instance of `ArrayApply`.
+    For more details, please have a look at the implementations inside `ArrayApply`.
+
+    Returns
+    -------
+    ArrayApply :
+        Class instance implementing all 'array_apply' processes.
+
+    """
+    return ArrayApply()
+
+
+class ArrayApply:
+    """
+    Class implementing all 'array_apply' processes.
+
+    """
+
+    @staticmethod
+    def exec_num():
+        pass
+
+    @staticmethod
+    def exec_np(data, process, context=None):
+        """
+        Applies a unary process which takes a single value such as `absolute` or `sqrt` to each value in the array.
+        This is basically what other languages call either a `for each` loop or a `map` function.
+
+        Parameters
+        ----------
+        data : np.array
+            An array.
+        process : callable
+            A process to be applied on each value, may consist of multiple sub-processes.
+            The specified process must be unary meaning that it must work on a single value.
+            The following parameters are passed to the process:
+                - `x` : The value of the current element being processed.
+                - `context` : Additional data passed by the user.
+        context : dict, optional
+            Additional data/keyword arguments to be passed to the process.
+
+        Returns
+        -------
+        np.array :
+            An array with the newly computed values. The number of elements are the same as for the original array.
+
+        Notes
+        -----
+        - The process must be able to deal with NumPy arrays.
+        - additional arguments `index` and `label` are ignored as process arguments
+
+        """
+
+        context = context if context is not None else {}
+        return process(data, **context)
+
+    @staticmethod
+    def exec_xar():
+        pass
+
+    @staticmethod
+    def exec_da():
+        pass
+
+
+########################################################################################################################
+# Array Filter Process
+########################################################################################################################
+
+@process
+def array_filter():
+    """
+    Returns class instance of `ArrayFilter`.
+    For more details, please have a look at the implementations inside `ArrayFilter`.
+
+    Returns
+    -------
+    ArrayFilter :
+        Class instance implementing all 'array_filter' processes.
+
+    """
+    return ArrayFilter()
+
+
+class ArrayFilter:
+    """
+    Class implementing all 'array_filter' processes.
+
+    """
+
+    @staticmethod
+    def exec_num():
+        pass
+
+    @staticmethod
+    def exec_np(data, condition, context=None):
+        """
+        Filters the array elements based on a logical expression so that afterwards an array is returned that only
+        contains the values conforming to the condition.
+
+        Parameters
+        ----------
+        data : np.array
+            An array.
+        condition : callable
+            A condition that is evaluated against each value in the array. Only the array elements where the
+            condition returns `True` are preserved.
+            The following parameters are passed to the process:
+                - `x` : The value of the current element being processed.
+                - `context` : Additional data passed by the user.
+        context : dict, optional
+            Additional data/keyword arguments to be passed to the condition.
+
+        Returns
+        -------
+        np.array :
+            An array filtered by the specified condition. The number of elements are less than or equal compared to
+            the original array.
+
+        Notes
+        -----
+        - The condition must be able to deal with NumPy arrays.
+        - additional arguments `index` and `label` are ignored as condition arguments
+
+        """
+
+        context = context if context is not None else {}
+        return data[condition(data, **context)]
+
+    @staticmethod
+    def exec_xar():
+        pass
+
+    @staticmethod
+    def exec_da():
+        pass
+
+
+########################################################################################################################
+# Array Find Process
+########################################################################################################################
+
+@process
+def array_find():
+    """
+    Returns class instance of `ArrayFind`.
+    For more details, please have a look at the implementations inside `ArrayFind`.
+
+    Returns
+    -------
+    ArrayFind :
+        Class instance implementing all 'array_find' processes.
+
+    """
+    return ArrayFind()
+
+
+class ArrayFind:
+    """
+    Class implementing all 'array_find' processes.
+
+    """
+
+    @staticmethod
+    def exec_num():
+        pass
+
+    @staticmethod
+    def exec_np(data, value, dimension=0):
+        """
+        Checks whether the array specified for `data` contains the value specified in `value` and returns the
+        zero-based index for the first match. If there's no match, np.nan is returned..
+        Remarks:
+            - All definitions for the process `eq` regarding the comparison of values apply here as well.
+              A np.nan return value from eq is handled exactly as `False` (no match).
+            - Temporal strings are treated as normal strings and are not interpreted.
+            - If the specified value is np.nan, the process always returns np.nan.
+
+
+        Parameters
+        ----------
+        data : np.array
+            An array to find the value in.
+        value : object
+            Value to find in `data`.
+        dimension : int, optional
+            Defines the dimension along to find the value (default is 0).
+
+        Returns
+        -------
+        int :
+            Returns the index of the first element with the specified value.
+            If no element was found, np.nan is returned.
+
+        Notes
+        -----
+        Own implementation, since np.argwhere does not fulfil the requirements.
+
+        """
+        if np.isnan(value) or is_empty(data):
+            return np.nan
+        else:
+            bool_idxs = (data == value)
+            idxs = np.argmax(bool_idxs, axis=dimension)
+            return idxs
+
+    @staticmethod
+    def exec_xar():
+        pass
+
+    @staticmethod
+    def exec_da():
+        pass
+
+
+########################################################################################################################
+# Array Labels Process
+########################################################################################################################
+
+@process
+def array_labels():
+    """
+    Returns class instance of `ArrayLabels`.
+    For more details, please have a look at the implementations inside `ArrayLabels`.
+
+    Returns
+    -------
+    ArrayLabels :
+        Class instance implementing all 'array_labels' processes.
+
+    """
+    return ArrayLabels()
+
+
+class ArrayLabels:
+    """
+    Class implementing all 'array_labels' processes.
+
+    """
+
+    @staticmethod
+    def exec_num():
+        pass
+
+    @staticmethod
+    def exec_np(data, dimension=0):
+        """
+        Returns all labels for a labeled array in the data cube. The labels have the same order as in the array.
+
+        Parameters
+        ----------
+        data : np.array
+            An array with labels.
+        dimension : int, optional
+            Defines the dimension along to find the labels of the array (default is 0).
+
+        Returns
+        -------
+        np.array :
+            The labels as an array.
+
+        """
+        n_vals = data.shape[dimension]
+        return np.arange(n_vals)
 
     @staticmethod
     def exec_xar():

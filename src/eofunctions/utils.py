@@ -38,31 +38,33 @@ def eval_datatype(data):
     return datatype
 
 
-def process(processor, data_key="data"):
+def process(processor):
     def fun_wrapper(*args, **kwargs):
         cls = processor()
 
-        if not args:
-            datatype = eval_datatype(kwargs[data_key])
-        else:
-            datatype = eval_datatype(args[0])
+        datatypes = []
+        # retrieve data types of input arguments and convert lists to numpy arrays
+        args = list(args)
+        for i, arg in enumerate(args):
+            datatypes.append(eval_datatype(arg))
+            if isinstance(arg, list):
+                args[i] = list2nparray(arg)
+        args = tuple(args)
 
-        if datatype == "np":
+        # retrieve data types of input keyword arguments and convert lists to numpy arrays
+        for key, kwarg in kwargs.items():
+            datatypes.append(eval_datatype(kwarg))
+            if isinstance(kwarg, list):
+                kwargs[key] = list2nparray(kwarg)
+
+        datatypes = np.array(datatypes)
+        if (datatypes == "np").any():
             cls_fun = getattr(cls, "exec_np")
-            if not args:
-                if isinstance(kwargs[data_key], list):
-                    kwargs[data_key] = list2nparray(kwargs[data_key])
-            else:
-                if isinstance(args[0], list):
-                    args = list(args)
-                    args[0] = list2nparray(args[0])
-                    args = tuple(args)
-
-        elif datatype == "xar":
+        elif (datatypes == "xar").any():
             cls_fun = getattr(cls, "exec_xar")
-        elif datatype == "dar":
+        elif (datatypes == "dar").any():
             cls_fun = getattr(cls, "exec_dar")
-        elif datatype in ["num", "none", "dt"]:
+        elif ((datatypes == "num") | (datatypes == "none") | (datatypes == "dt")).all():
             cls_fun = getattr(cls, "exec_num")
         else:
             raise Exception('Datatype unknown.')
@@ -73,6 +75,19 @@ def process(processor, data_key="data"):
 
 
 def list2nparray(x):
+    """
+    Converts a list in a nump
+
+    Parameters
+    ----------
+    x : list or np.ndarray
+        List to convert.
+
+    Returns
+    -------
+    np.ndarray
+
+    """
     x_tmp = np.array(x)
     if x_tmp.dtype.kind in ['U', 'S']:
         x = np.array(x, dtype=object)
@@ -158,4 +173,4 @@ def str2time(string, allow_24=False):
     return date_time
 
 if __name__ == '__main__':
-    create_slices(0, (3, 4, 5), 0)
+    pass
