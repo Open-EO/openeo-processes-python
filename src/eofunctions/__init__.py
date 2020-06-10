@@ -11,7 +11,5 @@ except DistributionNotFound:
 from eofunctions.logic import *
 from eofunctions.arrays import *
 from eofunctions.comparison import *
-from eofunctions.mask import *
 from eofunctions.math import *
-from eofunctions.indexes import *
 from eofunctions.texts import *

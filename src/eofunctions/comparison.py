@@ -546,7 +546,9 @@ class Gt:
         """
         if x is None or y is None:
             return None
-        elif isinstance(x, (int, float, datetime.datetime)):
+        elif isinstance(x, str) and isinstance(y, str):
+            return str2time(x) > str2time(y)
+        elif isinstance(x, (int, float, datetime.datetime)) and isinstance(y, (int, float, datetime.datetime)):
             return x > y
         else:
             return False
@@ -650,7 +652,9 @@ class Gte:
         """
         if x is None or y is None:
             return None
-        elif isinstance(x, (int, float, datetime.datetime)):
+        elif isinstance(x, str) and isinstance(y, str):
+            return str2time(x) >= str2time(y)
+        elif isinstance(x, (int, float, datetime.datetime)) and isinstance(y, (int, float, datetime.datetime)):
             return x >= y
         else:
             return False
@@ -754,7 +758,9 @@ class Lt:
         """
         if x is None or y is None:
             return None
-        elif isinstance(x, (int, float, datetime.datetime)):
+        elif isinstance(x, str) and isinstance(y, str):
+            return str2time(x) < str2time(y)
+        elif isinstance(x, (int, float, datetime.datetime)) and isinstance(y, (int, float, datetime.datetime)):
             return x < y
         else:
             return False
@@ -858,7 +864,9 @@ class Lte:
         """
         if x is None or y is None:
             return None
-        elif isinstance(x, (int, float, datetime.datetime)):
+        elif isinstance(x, str) and isinstance(y, str):
+            return str2time(x) <= str2time(y)
+        elif isinstance(x, (int, float, datetime.datetime)) and isinstance(y, (int, float, datetime.datetime)):
             return x <= y
         else:
             return False
@@ -966,8 +974,14 @@ class Between:
         if x is None or min is None or max is None:
             return None
 
-        min = np.array(min)  # cast to np.array because of datetime objects
-        max = np.array(max)  # cast to np.array because of datetime objects
+        if isinstance(x, str):
+            x = str2time(x)
+
+        if isinstance(min, str):
+            min = str2time(min)
+
+        if isinstance(max, str):
+            max = str2time(max)
 
         if Lt().exec_num(max, min):
             return False

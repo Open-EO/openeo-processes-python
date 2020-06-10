@@ -51,7 +51,7 @@ class ArrayTester(unittest.TestCase):
         assert eof.count([1, 0, 3, 2]) == 4
         assert eof.count(["ABC", np.nan]) == 1
         assert eof.count([False, np.nan], condition=True) == 2
-        assert eof.count([0, 1, 2, 3, 4, 5, np.nan], condition=eof.eo_gt, context={'y': 2})
+        assert eof.count([0, 1, 2, 3, 4, 5, np.nan], condition=eof.gt, context={'y': 2})
 
     #TODO: add test
     def test_array_apply(self):
@@ -130,6 +130,11 @@ class ArrayTester(unittest.TestCase):
                              [-1, 2, 3, 4, 6, 7, 8, 9, 9])
         assert np.isclose(eof.sort([6, -1, 2, np.nan, 7, 4, np.nan, 8, 3, 9, 9], asc=False, nodata=True),
                           [9, 9, 8, 7, 6, 4, 3, 2, -1, np.nan, np.nan], equal_nan=True).all()
+
+    # TODO: add test
+    def test_mask(self):
+        """ Tests `mask` function. """
+        pass
 
 if __name__ == "__main__":
     unittest.main()

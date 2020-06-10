@@ -957,3 +957,74 @@ class Sort:
     @staticmethod
     def exec_da():
         pass
+
+
+########################################################################################################################
+# Mask Process
+########################################################################################################################
+
+@process
+def mask():
+    """
+    Returns class instance of `Mask`.
+    For more details, please have a look at the implementations inside `Mask`.
+
+    Returns
+    -------
+    Mask :
+        Class instance implementing all 'mask' processes.
+
+    """
+    return Mask()
+
+
+class Mask:
+    """
+    Class instance implementing all 'mask' processes.
+
+    """
+
+    @staticmethod
+    def exec_num():
+        pass
+
+    @staticmethod
+    def exec_np(data, mask, replacement=np.nan, dimension=0):
+        """
+        Applies a mask to an array. A mask is an array for which corresponding elements among `data` and `mask` are
+        compared and those elements in `data` are replaced whose elements in `mask` are non-zero (for numbers) or True
+        (for boolean values). The elements are replaced with the value specified for `replacement`, which defaults to
+        np.nan (no data).
+
+
+        Parameters
+        ----------
+        data : np.ndarray
+            An array to mask.
+        mask : np.ndarray
+            A mask as an array. Every element in `data` must have a corresponding element in `mask`.
+        replacement : float or int, optional
+            The value used to replace masked values with.
+        dimension : int, optional
+            Defines the dimension along to apply the mask (default is 0).
+
+        Returns
+        -------
+        np.ndarray :
+            The masked array.
+
+        """
+        if data.shape == mask.shape:
+            data[mask] = replacement
+        else:
+            data[mask[None, :, :]] = replacement
+
+        return data
+
+    @staticmethod
+    def exec_xar():
+        pass
+
+    @staticmethod
+    def exec_da():
+        pass

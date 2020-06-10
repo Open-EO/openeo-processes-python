@@ -20,12 +20,6 @@ class MathTester(unittest.TestCase):
         """ Tests `pi` function. """
         assert eof.pi() == np.pi
 
-    def test_not_(self):
-        """ Tests `not_` function. """
-        assert not eof.not_(True)
-        assert eof.not_(False)
-        assert eof.not_(None) is None
-
     def test_floor(self):
         """ Tests `floor` function. """
         assert eof.floor(0) == 0
@@ -328,6 +322,10 @@ class MathTester(unittest.TestCase):
         assert eof.divide(-2, 4) == -0.5
         assert eof.divide(1, None) is None
 
+    # TODO: add test
+    def test_normalized_difference(self):
+        """ Tests `normalized_difference` function. """
+        pass
 
 if __name__ == "__main__":
     unittest.main()

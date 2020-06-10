@@ -4099,5 +4099,90 @@ class Divide:
         pass
 
 
+########################################################################################################################
+# Normalized Difference Process
+########################################################################################################################
+
+@process
+def normalized_difference():
+    """
+    Returns class instance of `NormalizedDifference`.
+    For more details, please have a look at the implementations inside `NormalizedDifference`.
+
+    Returns
+    -------
+    NormalizedDifference :
+        Class instance implementing all 'normalized_difference' processes.
+
+    """
+    return NormalizedDifference()
+
+
+class NormalizedDifference:
+    """
+    Class instance implementing all 'normalized_difference' processes.
+
+    """
+
+    @staticmethod
+    def exec_num(x, y):
+        """
+        Computes the normalized difference for two variables. The normalized difference is computed as
+        `(x - y) / (x + y)´.
+
+        This process could be used for a number of remote sensing indices such as:
+            - NDVI: `x` = NIR band, `y` = red band
+            - NDWI: `x` = NIR band, `y` = SWIR band
+            - NDSI: `x` = green band, `y` = SWIR band
+
+        Parameters
+        ----------
+        x : float or int
+            The value for the first band.
+        y : float or int
+            The value for the second band.
+
+        Returns
+        -------
+        float :
+           The computed normalized difference.
+
+        """
+        return (x - y) / (x + y)
+
+    @staticmethod
+    def exec_np(x, y):
+        """
+        Computes the normalized difference for two arrays. The normalized difference is computed as
+        `(x - y) / (x + y)´.
+
+        This process could be used for a number of remote sensing indices such as:
+            - NDVI: `x` = NIR band, `y` = red band
+            - NDWI: `x` = NIR band, `y` = SWIR band
+            - NDSI: `x` = green band, `y` = SWIR band
+
+        Parameters
+        ----------
+        x : np.ndarray
+            The array for the first band.
+        y : np.ndarray
+            The array for the second band.
+
+        Returns
+        -------
+        np.ndarray :
+           The computed normalized difference.
+
+        """
+        return NormalizedDifference.exec_num(x, y)
+
+    @staticmethod
+    def exec_xar():
+        pass
+
+    @staticmethod
+    def exec_da():
+        pass
+
 if __name__ == '__main__':
     pass

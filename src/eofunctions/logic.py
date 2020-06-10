@@ -1,3 +1,4 @@
+import copy
 import numpy as np
 from eofunctions.utils import process
 from eofunctions.comparison import is_empty
@@ -125,7 +126,8 @@ class Or:
             Boolean result of the logical OR.
 
         """
-        return x or y if None not in [x, y] else None
+
+        return None if None in [x, y] and False in [x, y] else x or y
 
     @staticmethod
     def exec_np(x, y):
@@ -443,7 +445,10 @@ class Any:
 
         """
         if is_empty(data):
-            return None
+            return np.nan
+
+        if len(data.shape) == 1:  # exand data if it has only one dimension
+            data = data[:, None]
 
         nan_ar = np.isnan(data)
         if ignore_nodata:
@@ -453,6 +458,7 @@ class Any:
             nan_mask = np.any(nan_ar, axis=dimension)
 
         data_any = np.any(data, axis=dimension)
+        data_any = data_any.astype(np.float32)  # convert to float to store NaN values
         data_any[nan_mask] = np.nan
         return data_any
 
@@ -520,17 +526,23 @@ class All:
 
         """
         if is_empty(data):
-            return None
+            return np.nan
+
+        if len(data.shape) == 1:  # exand data if it has only one dimension
+            data = data[:, None]
 
         nan_ar = np.isnan(data)
         if ignore_nodata:
             nan_mask = np.all(nan_ar, axis=dimension)
+            data_all = np.all(data, axis=dimension)
         else:
-            nan_mask = np.any(nan_ar, axis=dimension)
+            nan_mask = np.any(nan_ar, axis=dimension)  # flag elements with at least one NaN value along the dimension
+            data_all = np.all(data, axis=dimension)
+            nan_mask = nan_mask & data_all  # reset nan mask to only mask trues and NaN values
 
-        data_any = np.all(data, axis=dimension)
-        data_any[nan_mask] = np.nan
-        return data_any
+        data_all = data_all.astype(np.float32)  # convert to float to store NaN values
+        data_all[nan_mask] = np.nan
+        return data_all
 
     @staticmethod
     def exec_xar():

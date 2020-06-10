@@ -1,14 +1,11 @@
 import xarray
 import dask
-import copy
 import datetime
 import re
+import numpy as np
 from datetime import timezone
 from datetime import timedelta
-from datetime import time
 from datetime import datetime
-
-import numpy as np
 
 
 def eval_datatype(data):
@@ -123,51 +120,74 @@ def create_slices(index, axis=0, n_axes=1):
     return tuple(slices)
 
 
-def str2time(string, allow_24=False):
-    # handle timezone formatting
+def str2time(string, allow_24h=False):
+    """
+    Converts time strings in various formats to a datetime object.
+    The datetime formats follow the RFC3339 convention.
+
+    Parameters
+    ----------
+    string : str
+        String representation of time or date.
+    allow_24h : bool, optional
+        If True, `string` is allowed to contain '24' as hour value.
+
+    Returns
+    -------
+    datetime.datetime :
+        Parsed datetime object.
+
+    """
+
+    # handle timezone formatting and replace possibly occuring ":" in time zone string
+    # handle timezone formatting for +
     if "+" in string:
         string_parts = string.split('+')
         string_parts[-1] = string_parts[-1].replace(':', '')
         string = "+".join(string_parts)
 
-    if "t" in string.lower():  # special handling due to - sign in date string
-        if "-" in string[10:]:
-            string_parts = string[10:].split('-')
+    # handle timezone formatting for -
+    if "t" in string.lower():  # a full datetime string is given
+        time_string = string[10:]
+        if "-" in time_string:
+            string_parts = time_string.split('-')
             string_parts[-1] = string_parts[-1].replace(':', '')
             string = string[:10] + "-".join(string_parts)
-    else:
+    else:  # a time string is given
         if "-" in string:
             string_parts = string.split('-')
             string_parts[-1] = string_parts[-1].replace(':', '')
             string = "-".join(string_parts)
 
-    if allow_24:
-        pattern = re.compile("24:\d{2}:\d{2}")
-        pattern_match = re.search(pattern, string)
-        if pattern_match:
+    # searches for 24 in hour value
+    pattern = re.compile("24:\d{2}:\d{2}")
+    pattern_match = re.search(pattern, string)
+    if pattern_match:
+        if allow_24h:  # if the user allows 24 as an hour value, replace 24 by 23 and add a timedelta of one hour later
             old_sub_string = pattern_match.group()
             new_sub_string = "23" + old_sub_string[2:]
             string = string.replace(old_sub_string, new_sub_string)
+        else:
+            err_msg = "24 is not allowed as an hour value. Hours are only allowed to be given in the range 0 - 23. " \
+                      "Set 'allow_24h' to 'True' if you want to translate 24 as a an hour."
+            raise ValueError(err_msg)
 
     rfc3339_time_formats = ["%Y-%m-%d", "%Y-%m-%dT%H:%M:%SZ", "%Y-%m-%dT%H:%M:%S.%fZ", "%Y-%m-%dT%H:%M:%S.%f",
                             "%Y-%m-%dT%H:%M:%Sz", "%Y-%m-%dt%H:%M:%SZ", "%Y-%m-%dt%H:%M:%Sz", "%Y-%m-%dT%H:%M:%S%z",
                             "%Y-%m-%dt%H:%M:%S%z", "%H:%M:%SZ", "%H:%M:%S%z"]
     date_time = None
+    # loops through each format and takes the one for which the translation succeeded first
     for i, used_time_format in enumerate(rfc3339_time_formats):
         try:
             date_time = datetime.strptime(string, used_time_format)
             if date_time.tzinfo is None:
                 date_time = date_time.replace(tzinfo=timezone.utc)
-            if i == 0:
-                date_time_max = datetime.combine(date_time.date(), time()) + timedelta(hours=24) \
-                                - timedelta(seconds=1)
-                date_time = (datetime.combine(date_time.date(), time()).replace(tzinfo=timezone.utc),
-                             date_time_max.replace(tzinfo=timezone.utc))
             break
         except:
             continue
 
-    if date_time and allow_24:
+    # add a timedelta of one hour if 24 is allowed as an hour value
+    if date_time and allow_24h:
         date_time += timedelta(hours=1)
 
     return date_time
