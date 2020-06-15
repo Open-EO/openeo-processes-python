@@ -1,4 +1,3 @@
-import copy
 import numpy as np
 from openeo_processes.utils import process
 from openeo_processes.comparison import is_empty

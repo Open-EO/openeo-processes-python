@@ -9,12 +9,37 @@ from datetime import datetime
 
 
 def eval_datatype(data):
+    """
+    Returns a data type tag depending on the data type of `data`.
+    This can be:
+        - "np": `np.ndarray` or list (list are directly converted to numpy arrays)
+        - "xar": `xarray.DataArray`
+        - "dar": `dask.array.core.Array`
+        - "num": `np.integer`, `np.float`, int, float, or str
+        - "dt": `datetime.datetime`
+        - "dict": dict
+        - "fun": callable object
+        - "none": None
+
+    Parameters
+    ----------
+    data : object
+        Data to get the data type from.
+
+    Returns
+    -------
+    str :
+        Data type tag.
+
+    """
     is_list = isinstance(data, list)
     is_np = isinstance(data, np.ndarray) | is_list
     is_xar = isinstance(data, xarray.DataArray)
     is_dar = isinstance(data, dask.array.core.Array)
     is_num = isinstance(data, (int, float, str, np.integer, np.float))
     is_datetime = isinstance(data, datetime)
+    is_dict = isinstance(data, dict)
+    is_function = callable(data)
     is_none = data is None
 
     if is_np:
@@ -29,13 +54,33 @@ def eval_datatype(data):
         datatype = "none"
     elif is_datetime:
         datatype = "dt"
+    elif is_dict:
+        datatype = "dict"
+    elif is_function:
+        datatype = "fun"
     else:
-        datatype = None
+        err_msg = "Data type '{}' is unknown.".format(type(data))
+        raise ValueError(err_msg)
 
     return datatype
 
 
 def process(processor):
+    """
+    This function serves as a decorator for empty openEO process definitions, which call a class `processor` defining
+    the process implementations for different data types.
+
+    Parameters
+    ----------
+    processor : class
+        Class implementing an openEO process containing the methods `exec_num`, `exec_np`, `exec_xar`, or `exec_dar`.
+
+    Returns
+    -------
+    object :
+        Process/function wrapper returning the result of the process.
+
+    """
     def fun_wrapper(*args, **kwargs):
         cls = processor()
 

@@ -1,6 +1,6 @@
 import unittest
 import numpy as np
-import openeo_processes as eof
+import openeo_processes as oeop
 
 
 class LogicTester(unittest.TestCase):
@@ -8,67 +8,67 @@ class LogicTester(unittest.TestCase):
 
     def test_not_(self):
         """ Tests `not_` function. """
-        assert not eof.not_(True)
-        assert eof.not_(False)
-        assert eof.not_(None) is None
+        assert not oeop.not_(True)
+        assert oeop.not_(False)
+        assert oeop.not_(None) is None
 
     def test_and_(self):
         """ Tests `and_` function. """
-        assert not eof.and_(False, None)
-        assert eof.and_(True, None) is None
-        assert not eof.and_(False, False)
-        assert not eof.and_(True, False)
-        assert eof.and_(True, True)
+        assert not oeop.and_(False, None)
+        assert oeop.and_(True, None) is None
+        assert not oeop.and_(False, False)
+        assert not oeop.and_(True, False)
+        assert oeop.and_(True, True)
 
     def test_or_(self):
         """ Tests `or_` function. """
-        assert eof.or_(False, None) is None
-        assert eof.or_(True, None)
-        assert not eof.or_(False, False)
-        assert eof.or_(True, False)
-        assert eof.or_(True, True)
+        assert oeop.or_(False, None) is None
+        assert oeop.or_(True, None)
+        assert not oeop.or_(False, False)
+        assert oeop.or_(True, False)
+        assert oeop.or_(True, True)
 
     def test_xor(self):
         """ Tests `xor` function. """
-        assert eof.xor(False, None) is None
-        assert eof.xor(True, None) is None
-        assert not eof.xor(False, False)
-        assert eof.xor(True, False)
-        assert not eof.xor(True, True)
+        assert oeop.xor(False, None) is None
+        assert oeop.xor(True, None) is None
+        assert not oeop.xor(False, False)
+        assert oeop.xor(True, False)
+        assert not oeop.xor(True, True)
 
     def test_if_(self):
         """ Tests `if_` function. """
-        assert eof.if_(True, "A", "B") == "A"
-        assert eof.if_(None, "A", "B") == "B"
-        assert all(eof.if_(False, [1, 2, 3], [4, 5, 6]) == [4, 5, 6])
-        assert eof.if_(True, 123) == 123
-        assert eof.if_(False, 1) is None
+        assert oeop.if_(True, "A", "B") == "A"
+        assert oeop.if_(None, "A", "B") == "B"
+        assert all(oeop.if_(False, [1, 2, 3], [4, 5, 6]) == [4, 5, 6])
+        assert oeop.if_(True, 123) == 123
+        assert oeop.if_(False, 1) is None
 
     def test_any_(self):
         """ Tests `any_` function. """
-        assert not eof.any_([False, np.nan])
-        assert eof.any_([True, np.nan])
-        assert np.isnan(eof.any_([False, np.nan], ignore_nodata=False))
-        assert eof.any_([True, np.nan], ignore_nodata=False)
-        assert eof.any_([True, False, True, False])
-        assert eof.any_([True, False])
-        assert not eof.any_([False, False])
-        assert eof.any_([True])
-        assert np.isnan(eof.any_([np.nan], ignore_nodata=False))
-        assert np.isnan(eof.any_([]))
+        assert not oeop.any_([False, np.nan])
+        assert oeop.any_([True, np.nan])
+        assert np.isnan(oeop.any_([False, np.nan], ignore_nodata=False))
+        assert oeop.any_([True, np.nan], ignore_nodata=False)
+        assert oeop.any_([True, False, True, False])
+        assert oeop.any_([True, False])
+        assert not oeop.any_([False, False])
+        assert oeop.any_([True])
+        assert np.isnan(oeop.any_([np.nan], ignore_nodata=False))
+        assert np.isnan(oeop.any_([]))
 
     def test_all_(self):
         """ Tests `all_` function. """
-        assert not eof.all_([False, np.nan])
-        assert eof.all_([True, np.nan])
-        assert not eof.all_([False, np.nan], ignore_nodata=False)
-        assert np.isnan(eof.all_([True, np.nan], ignore_nodata=False))
-        assert not eof.all_([True, False, True, False])
-        assert not eof.all_([True, False])
-        assert eof.any_([True, True])
-        assert eof.any_([True])
-        assert np.isnan(eof.any_([np.nan], ignore_nodata=False))
-        assert np.isnan(eof.any_([]))
+        assert not oeop.all_([False, np.nan])
+        assert oeop.all_([True, np.nan])
+        assert not oeop.all_([False, np.nan], ignore_nodata=False)
+        assert np.isnan(oeop.all_([True, np.nan], ignore_nodata=False))
+        assert not oeop.all_([True, False, True, False])
+        assert not oeop.all_([True, False])
+        assert oeop.any_([True, True])
+        assert oeop.any_([True])
+        assert np.isnan(oeop.any_([np.nan], ignore_nodata=False))
+        assert np.isnan(oeop.any_([]))
 
 if __name__ == '__main__':
     unittest.main()
