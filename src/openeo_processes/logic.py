@@ -1,7 +1,7 @@
 import copy
 import numpy as np
-from eofunctions.utils import process
-from eofunctions.comparison import is_empty
+from openeo_processes.utils import process
+from openeo_processes.comparison import is_empty
 
 
 ########################################################################################################################

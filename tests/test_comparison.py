@@ -1,5 +1,5 @@
 import unittest
-import eofunctions as eof
+import openeo_processes as eof
 
 
 class ComparisonTester(unittest.TestCase):

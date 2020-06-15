@@ -1,6 +1,6 @@
 import unittest
 import numpy as np
-import eofunctions as eof
+import openeo_processes as eof
 
 
 class LogicTester(unittest.TestCase):

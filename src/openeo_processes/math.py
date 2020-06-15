@@ -2,11 +2,11 @@ import numpy as np
 import xarray_extras as xar_addons
 import builtins
 
-from eofunctions.utils import process
-from eofunctions.comparison import is_empty
+from openeo_processes.utils import process
+from openeo_processes.comparison import is_empty
 
-from eofunctions.errors import QuantilesParameterConflict
-from eofunctions.errors import QuantilesParameterMissing
+from openeo_processes.errors import QuantilesParameterConflict
+from openeo_processes.errors import QuantilesParameterMissing
 
 
 ########################################################################################################################

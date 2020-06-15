@@ -2,8 +2,8 @@ import datetime
 import numpy as np
 import pandas as pd
 
-from eofunctions.utils import process
-from eofunctions.utils import str2time
+from openeo_processes.utils import process
+from openeo_processes.utils import str2time
 
 
 # TODO: test if this works for different data types

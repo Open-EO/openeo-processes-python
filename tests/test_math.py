@@ -6,7 +6,7 @@ https://openeo.org/documentation/1.0/processes.html
 import unittest
 import numpy as np
 from copy import deepcopy
-import eofunctions as eof
+import openeo_processes as eof
 
 
 class MathTester(unittest.TestCase):

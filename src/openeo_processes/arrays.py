@@ -1,14 +1,14 @@
 import numpy as np
 import pandas as pd
 
-from eofunctions.utils import create_slices
-from eofunctions.utils import process
-from eofunctions.comparison import is_valid
-from eofunctions.comparison import is_empty
+from openeo_processes.utils import create_slices
+from openeo_processes.utils import process
+from openeo_processes.comparison import is_valid
+from openeo_processes.comparison import is_empty
 
-from eofunctions.errors import ArrayElementNotAvailable
-from eofunctions.errors import ArrayElementParameterMissing
-from eofunctions.errors import ArrayElementParameterConflict
+from openeo_processes.errors import ArrayElementNotAvailable
+from openeo_processes.errors import ArrayElementParameterMissing
+from openeo_processes.errors import ArrayElementParameterConflict
 
 ########################################################################################################################
 # Array Contains Process
