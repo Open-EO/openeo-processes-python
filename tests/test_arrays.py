@@ -1,101 +1,140 @@
-import sys
-import os
-sys.path.append(os.path.dirname(__file__))
+"""
+Most tests are in alignment with:
+https://openeo.org/documentation/1.0/processes.html
+"""
+
+import unittest
 import numpy as np
-import eofunctions as eof
-from utils_test import assert_list_items
+import openeo_processes as oeop
 
 
-def test_array_contains():
-    assert eof.eo_array_contains([1, 2, 3], element=2) == True
-    assert eof.eo_array_contains(["A", "B", "C"], element="b") == False
-    assert eof.eo_array_contains([1, 2, 3], element="2") == False
-    assert eof.eo_array_contains([1, 2, 3], element=2) == True
-    assert eof.eo_array_contains([1, 2, np.nan], element=np.nan) == True
-    assert eof.eo_array_contains([[1, 2], [3, 4]], element=[1, 2]) == True
-    assert eof.eo_array_contains([[1, 2],[3, 4]], element=2) == False
-    assert eof.eo_array_contains([{"a": "b"}, {"c": "d"}], element={"a": "b"}) == True
+class ArrayTester(unittest.TestCase):
+    """ Tests all array functions. """
 
+    def test_array_contains(self):
+        """ Tests `array_contains` function. """
+        assert oeop.array_contains([1, 2, 3], value=2)
+        assert not oeop.array_contains(["A", "B", "C"], value="b")
+        assert not oeop.array_contains([1, 2, 3], value="2")
+        assert oeop.array_contains([1, 2, 3], value=2)
+        assert oeop.array_contains([1, 2, np.nan], value=np.nan)
+        assert oeop.array_contains([[1, 2], [3, 4]], value=[1, 2])
+        assert not oeop.array_contains([[1, 2], [3, 4]], value=2)
+        assert oeop.array_contains([{"a": "b"}, {"c": "d"}], value={"a": "b"})
 
-def test_array_element():
-    assert eof.eo_array_element([9, 8, 7, 6, 5], index=2) == 7
-    assert eof.eo_array_element(["A", "B", "C"], index=0) == "A"
-    assert np.isnan(eof.eo_array_element([], index=0, return_nodata=True))
-    # multi-dim
-    test_array = np.empty((3, 2,2))
-    test_array[0, :,:] = np.array([[1, 2], [3, 4]])
-    test_array[1, :,:] = np.array([[1, 2], [3, 4]]) * 20
-    test_array[2, :,:] = np.array([[1, 2], [3, 4]]) * 500
-    array_i2_d0 = np.array([
-                            [500, 1000],
-                            [1500, 2000]
-                            ])
-    array_i0_d1 = np.array([
-                            [1, 2],
-                            [20, 40],
-                            [500, 1000]
-                            ])
-    assert np.sum(eof.eo_array_element(test_array, index=2, dimension=0) - array_i2_d0) == 0
-    assert np.sum(eof.eo_array_element(test_array, index=0, dimension=1) - array_i0_d1) == 0
+    def test_array_element(self):
+        """ Tests `array_element` function. """
+        assert oeop.array_element([9, 8, 7, 6, 5], index=2) == 7
+        assert oeop.array_element(["A", "B", "C"], index=0) == "A"
+        assert np.isnan(oeop.array_element([], index=0, return_nodata=True))
 
-def test_count():
-    assert eof.eo_count([]) == 0
-    assert eof.eo_count([1, 0, 3, 2]) == 4
-    assert eof.eo_count(["ABC", np.nan]) == 1
-    assert eof.eo_count([False, np.nan], expression=True) == 2
-    assert eof.eo_count([False, np.nan], expression=lambda x: eof.eo_gt(x, 2))
+        # multi-dim
+        test_array = np.empty((3, 2, 2))
+        test_array[0, :, :] = np.array([[1, 2], [3, 4]])
+        test_array[1, :, :] = np.array([[1, 2], [3, 4]]) * 20
+        test_array[2, :, :] = np.array([[1, 2], [3, 4]]) * 500
+        array_i2_d0 = np.array([
+                                [500, 1000],
+                                [1500, 2000]
+                                ])
+        array_i0_d1 = np.array([
+                                [1, 2],
+                                [20, 40],
+                                [500, 1000]
+                                ])
+        assert np.isclose(oeop.array_element(test_array, index=2, dimension=0), array_i2_d0, equal_nan=True).all()
+        assert np.isclose(oeop.array_element(test_array, index=0, dimension=1), array_i0_d1, equal_nan=True).all()
 
+    def test_count(self):
+        """ Tests `count` function. """
+        assert oeop.count([]) == 0
+        assert oeop.count([1, 0, 3, 2]) == 4
+        assert oeop.count(["ABC", np.nan]) == 1
+        assert oeop.count([False, np.nan], condition=True) == 2
+        assert oeop.count([0, 1, 2, 3, 4, 5, np.nan], condition=oeop.gt, context={'y': 2})
 
-def test_first():
-    assert eof.eo_first([1, 0, 3, 2]) == 1
-    assert eof.eo_first([np.nan, "A", "B"]) == "A"
-    assert np.isnan(eof.eo_first([np.nan, 2, 3], ignore_nodata=False))
-    assert np.isnan(eof.eo_first([]))
+    #TODO: add test
+    def test_array_apply(self):
+        """ Tests `array_apply` function. """
+        pass
 
+    # TODO: add test
+    def test_array_filter(self):
+        """ Tests `array_filter` function. """
+        pass
 
-def test_last():
-    assert eof.eo_last([1, 0, 3, 2]) == 2
-    assert eof.eo_last(["A", "B", np.nan]) == "B"
-    assert np.isnan(eof.eo_last([0, 1, np.nan], ignore_nodata=False))
-    assert np.isnan(eof.eo_last([]))
+    # TODO: add test
+    def test_array_find(self):
+        """ Tests `array_find` function. """
+        pass
 
+    # TODO: add test
+    def test_array_labels(self):
+        """ Tests `array_labels` function. """
+        pass
 
-def test_order():
-    assert_list_items(eof.eo_order([6, -1, 2, np.nan, 7, 4, np.nan, 8, 3, 9, 9]),
-                      [1, 2, 8, 5, 0, 4, 7, 9, 10])
-    assert_list_items(eof.eo_order([6, -1, 2, np.nan, 7, 4, np.nan, 8, 3, 9, 9], nodata=True),
-                      [1, 2, 8, 5, 0, 4, 7, 9, 10, 3, 6])
-    assert_list_items(eof.eo_order([6, -1, 2, np.nan, 7, 4, np.nan, 8, 3, 9, 9], asc=False, nodata=True),
-                      [9, 10, 7, 4, 0, 5, 8, 2, 1, 3, 6])
-    assert_list_items(eof.eo_order([6, -1, 2, np.nan, 7, 4, np.nan, 8, 3, 9, 9], asc=False, nodata=False),
-                      [6, 3, 9, 10, 7, 4, 0, 5, 8, 2, 1])
+    def test_first(self):
+        """ Tests `first` function. """
+        assert oeop.first([1, 0, 3, 2]) == 1
+        assert oeop.first([np.nan, "A", "B"]) == "A"
+        assert np.isnan(oeop.first([np.nan, 2, 3], ignore_nodata=False))
+        assert np.isnan(oeop.first([]))
 
+        # 2D test
+        test_arr = np.array([[[np.nan, 2], [1, 2]], [[3, 2], [1, 2]], [[1, 2], [1, np.nan]]])
+        first_elem_ref = np.array([[[3., 2.], [1., 2.]]])
+        first_elem = oeop.first(test_arr)
+        assert np.isclose(first_elem, first_elem_ref, equal_nan=True).all()
+        test_arr = np.array([[[np.nan, 2], [1, 2]], [[3, 2], [1, 2]], [[1, 2], [1, np.nan]]])
+        first_elem_ref = np.array([[[np.nan, 2.], [1., 2.]]])
+        first_elem = oeop.first(test_arr, ignore_nodata=False)
+        assert np.isclose(first_elem, first_elem_ref, equal_nan=True).all()
 
-def test_rearrange():
-    assert_list_items(eof.eo_rearrange([5, 4, 3], [2, 1, 0]), [3, 4, 5])
-    assert_list_items(eof.eo_rearrange([5, 4, 3, 2], [1, 3]), [4, 2])
-    assert_list_items(eof.eo_rearrange([5, 4, 3, 2], [0, 2, 1, 3]), [5, 3, 4, 2])
+    def test_last(self):
+        """ Tests `last` function. """
+        assert oeop.last([1, 0, 3, 2]) == 2
+        assert oeop.last(["A", "B", np.nan]) == "B"
+        assert np.isnan(oeop.last([0, 1, np.nan], ignore_nodata=False))
+        assert np.isnan(oeop.last([]))
 
+        # 2D test
+        test_arr = np.array([[[np.nan, 2], [1, 2]], [[3, 2], [1, 3]], [[1, 2], [1, np.nan]]])
+        last_elem_ref = np.array([[[1., 2.], [1., 3.]]])
+        last_elem = oeop.last(test_arr)
+        assert np.isclose(last_elem, last_elem_ref, equal_nan=True).all()
+        test_arr = np.array([[[np.nan, 2], [1, 2]], [[3, 2], [1, 2]], [[1, 2], [1, np.nan]]])
+        last_elem_ref = np.array([[[1., 2.], [1., np.nan]]])
+        last_elem = oeop.last(test_arr, ignore_nodata=False)
+        assert np.isclose(last_elem, last_elem_ref, equal_nan=True).all()
 
-def test_sort():
-    assert_list_items(eof.eo_sort([6, -1, 2, np.nan, 7, 4, np.nan, 8, 3, 9, 9]), [-1, 2, 3, 4, 6, 7, 8, 9, 9])
-    assert_list_items(eof.eo_sort([6, -1, 2, np.nan, 7, 4, np.nan, 8, 3, 9, 9], asc=False, nodata=True),
-                      [9, 9, 8, 7, 6, 4, 3, 2, -1, np.nan, np.nan])
+    def test_order(self):
+        """ Tests `order` function. """
+        self.assertListEqual(oeop.order([6, -1, 2, np.nan, 7, 4, np.nan, 8, 3, 9, 9]).tolist(),
+                             [1, 2, 8, 5, 0, 4, 7, 9, 10])
+        self.assertListEqual(oeop.order([6, -1, 2, np.nan, 7, 4, np.nan, 8, 3, 9, 9], nodata=True).tolist(),
+                             [1, 2, 8, 5, 0, 4, 7, 9, 10, 3, 6])
+        self.assertListEqual(oeop.order([6, -1, 2, np.nan, 7, 4, np.nan, 8, 3, 9, 9], asc=False, nodata=True).tolist(),
+                             [9, 10, 7, 4, 0, 5, 8, 2, 1, 3, 6])
+        self.assertListEqual(oeop.order([6, -1, 2, np.nan, 7, 4, np.nan, 8, 3, 9, 9], asc=False, nodata=False).tolist(),
+                             [6, 3, 9, 10, 7, 4, 0, 5, 8, 2, 1])
 
+    def test_rearrange(self):
+        """ Tests `rearrange` function. """
+        self.assertListEqual(oeop.rearrange([5, 4, 3], [2, 1, 0]).tolist(), [3, 4, 5])
+        self.assertListEqual(oeop.rearrange([5, 4, 3, 2], [1, 3]).tolist(), [4, 2])
+        self.assertListEqual(oeop.rearrange([5, 4, 3, 2], [0, 2, 1, 3]).tolist(), [5, 3, 4, 2])
 
-def test_clip():
-    assert_list_items(eof.eo_clip([-2, -1, 0, 1, 2], min=-1, max=1), [-1, -1, 0, 1, 1])
-    assert_list_items(eof.eo_clip([-0.1, -0.001, np.nan, 0, 0.25, 0.75, 1.001, np.nan], min=0, max=1),
-                      [0, 0, np.nan, 0, 0.25, 0.75, 1, np.nan])
+    def test_sort(self):
+        """ Tests `sort` function. """
+        self.assertListEqual(oeop.sort([6, -1, 2, np.nan, 7, 4, np.nan, 8, 3, 9, 9]).tolist(),
+                             [-1, 2, 3, 4, 6, 7, 8, 9, 9])
+        assert np.isclose(oeop.sort([6, -1, 2, np.nan, 7, 4, np.nan, 8, 3, 9, 9], asc=False, nodata=True),
+                          [9, 9, 8, 7, 6, 4, 3, 2, -1, np.nan, np.nan], equal_nan=True).all()
 
+    # TODO: add test
+    def test_mask(self):
+        """ Tests `mask` function. """
+        pass
 
 if __name__ == "__main__":
-    #test_array_contains()
-    test_array_element()
-    #test_count()
-    #test_first()
-    #test_last()
-    #test_order()
-    #test_rearrange()
-    #test_sort()
-    #test_clip()
+    unittest.main()

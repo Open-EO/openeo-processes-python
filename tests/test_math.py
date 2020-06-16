@@ -1,346 +1,331 @@
-import sys
-import os
-sys.path.append(os.path.dirname(__file__))
-from copy import deepcopy
-import eofunctions as eof
+"""
+Most tests are in alignment with:
+https://openeo.org/documentation/1.0/processes.html
+"""
+
+import unittest
 import numpy as np
-from utils_test import assert_list_items
-
-
-def test_e():
-    assert eof.eo_e() == np.e
-
-
-def test_pi():
-    assert eof.eo_pi() == np.pi
-
-
-def test_int():
-    assert eof.eo_int(0) == 0
-    assert eof.eo_int(3.5) == 3
-    assert eof.eo_int(-0.4) == 0
-    assert eof.eo_int(-3.5) == -3
-
-
-def test_floor():
-    assert eof.eo_floor(0) == 0
-    assert eof.eo_floor(3.5) == 3
-    assert eof.eo_floor(-0.4) == -1
-    assert eof.eo_floor(-3.5) == -4
-
-
-def test_ceil():
-    assert eof.eo_ceil(0) == 0
-    assert eof.eo_ceil(3.5) == 4
-    assert eof.eo_ceil(-0.4) == 0
-    assert eof.eo_ceil(-3.5) == -3
-
-
-def test_round():
-    assert eof.eo_round(0) == 0
-    assert eof.eo_round(3.56, p=1) == 3.6
-    assert eof.eo_round(-0.4444444, p=2) == -0.44
-    assert eof.eo_round(-2.5) == -2
-    assert eof.eo_round(-3.5) == -4
-    assert eof.eo_round(1234.5, p=-2) == 1200
-
-
-def test_min():
-    assert eof.eo_min([1, 0, 3, 2]) == 0
-    assert eof.eo_min([5, 2.5, np.nan, -0.7]) == -0.7
-    assert np.isnan(eof.eo_min([1, 0, 3, np.nan, 2], ignore_nodata=False))
-    assert np.isnan(eof.eo_min([np.nan, np.nan]))
-
-
-def test_max():
-    assert eof.eo_max([1, 0, 3, 2]) == 3
-    assert eof.eo_max([5, 2.5, np.nan, -0.7]) == 5
-    assert np.isnan(eof.eo_max([1, 0, 3, np.nan, 2], ignore_nodata=False))
-    assert np.isnan(eof.eo_max([np.nan, np.nan]))
-
-
-def test_mean():
-    assert eof.eo_mean([1, 0, 3, 2]) == 1.5
-    assert eof.eo_mean([9, 2.5, np.nan, -2.5]) == 3
-    assert np.isnan(eof.eo_mean([1, np.nan], ignore_nodata=False))
-    assert np.isnan(eof.eo_mean([]))
-
-
-def test_median():
-    assert eof.eo_median([1, 3, 3, 6, 7, 8, 9]) == 6
-    assert eof.eo_median([1, 2, 3, 4, 5, 6, 8, 9]) == 4.5
-    assert eof.eo_median([-1, -0.5, np.nan, 1]) == -0.5
-    assert np.isnan(eof.eo_median([-1, 0, np.nan, 1], ignore_nodata=False))
-    assert np.isnan(eof.eo_median([]))
-
-
-def test_sd():
-    assert eof.eo_sd([-1, 1, 3, np.nan]) == 2
-    assert np.isnan(eof.eo_sd([-1, 1, 3, np.nan], ignore_nodata=False))
-    assert np.isnan(eof.eo_sd([]))
-
-
-def test_variance():
-    assert eof.eo_variance([-1, 1, 3]) == 4
-    assert eof.eo_variance([2, 3, 3, np.nan, 4, 4, 5]) == 1.1
-    assert np.isnan(eof.eo_variance([-1, 1, np.nan, 3], ignore_nodata=False))
-    assert np.isnan(eof.eo_variance([]))
-
-
-def test_quantiles():
-    quantiles_1 = eof.eo_quantiles(data=[2, 4, 4, 4, 5, 5, 7, 9], probabilities=[0.005, 0.01, 0.02, 0.05, 0.1, 0.5])
-    quantiles_1 = [eof.eo_round(quantile, p=2) for quantile in quantiles_1]
-    assert quantiles_1 == [2.07, 2.14, 2.28, 2.7, 3.4, 4.5]
-    quantiles_2 = eof.eo_quantiles(data=[2, 4, 4, 4, 5, 5, 7, 9], q=4)
-    quantiles_2 = [eof.eo_round(quantile, p=2) for quantile in quantiles_2]
-    assert quantiles_2 == [4, 4.5, 5.5]
-    quantiles_3 = eof.eo_quantiles(data=[-1, -0.5, np.nan, 1], q=2)
-    quantiles_3 = [eof.eo_round(quantile, p=2) for quantile in quantiles_3]
-    assert quantiles_3 == [-0.5]
-    quantiles_4 = eof.eo_quantiles(data=[-1, -0.5, np.nan, 1], q=4, ignore_nodata=False)
-    assert np.all([np.isnan(quantile) for quantile in quantiles_4]) and len(quantiles_4) == 3
-    quantiles_5 = eof.eo_quantiles(data=[], probabilities=[0.1, 0.5])
-    assert np.all([np.isnan(quantile) for quantile in quantiles_5]) and len(quantiles_5) == 2
-
-
-def test_mod():
-    assert eof.eo_mod(27, 5) == 2
-    assert eof.eo_mod(-27, 5) == 3
-    assert eof.eo_mod(27, -5) == -3
-    assert eof.eo_mod(-27, -5) == -2
-    assert eof.eo_mod(27, 5) == 2
-    assert np.isnan(eof.eo_mod(27, np.nan))
-    assert np.isnan(eof.eo_mod(np.nan, 5))
-
-
-def test_absolute():
-    assert eof.eo_absolute(0) == 0
-    assert eof.eo_absolute(3.5) == 3.5
-    assert eof.eo_absolute(-0.4) == 0.4
-    assert eof.eo_absolute(-3.5) == 3.5
-
-
-def test_power():
-    assert eof.eo_power(0, 2) == 0
-    assert eof.eo_power(2.5, 0) == 1
-    assert eof.eo_power(3, 3) == 27
-    assert eof.eo_round(eof.eo_power(5, -1), 1) == 0.2
-    assert eof.eo_power(1, 0.5) == 1
-    assert np.isnan(eof.eo_power(1, np.nan))
-    assert np.isnan(eof.eo_power(np.nan, 2))
-
-
-def test_sgn():
-    assert eof.eo_sgn(-2) == -1
-    assert eof.eo_sgn(3.5) == 1
-    assert eof.eo_sgn(0) == 0
-    assert np.isnan(eof.eo_sgn(np.nan))
-
-
-def test_sqrt():
-    assert eof.eo_sqrt(0) == 0
-    assert eof.eo_sqrt(1) == 1
-    assert eof.eo_sqrt(9) == 3
-    assert np.isnan(eof.eo_sqrt(np.nan))
-
-
-def test_exp():
-    assert eof.eo_exp(0) == 1
-    assert np.isnan(eof.eo_exp(np.nan))
-
-
-def test_ln():
-    assert eof.eo_ln(eof.eo_e()) == 1
-    assert eof.eo_ln(1) == 0
-
-
-def test_log():
-    assert eof.eo_log(10, 10) == 1
-    assert eof.eo_log(2, 2) == 1
-    assert eof.eo_log(4, 2) == 2
-    assert eof.eo_log(1, 16) == 0
-
-
-def test_cos():
-    assert eof.eo_cos(0) == 1
-
-
-def test_arccos():
-    assert eof.eo_arccos(1) == 0
-
-
-def test_cosh():
-    assert eof.eo_cosh(0) == 1
-
-
-def test_arcosh():
-    assert eof.eo_arcosh(1) == 0
-
-
-def test_sin():
-    assert eof.eo_sin(0) == 0
-
-
-def test_arcsin():
-    assert eof.eo_arcsin(0) == 0
-
-
-def test_sinh():
-    assert eof.eo_sinh(0) == 0
-
-
-def test_arsinh():
-    assert eof.eo_arsinh(0) == 0
-
-
-def test_tan():
-    assert eof.eo_tan(0) == 0
-
-
-def test_arctan():
-    assert eof.eo_arctan(0) == 0
-
-
-def test_tanh():
-    assert eof.eo_tanh(0) == 0
-
-
-def test_artanh():
-    assert eof.eo_artanh(0) == 0
-
-
-def test_arctan2():
-    assert eof.eo_arctan2(0, 0) == 0
-    assert np.isnan(eof.eo_arctan2(np.nan, 1.5))
-
-
-def test_cummax():
-    assert_list_items(eof.eo_cummax([1, 3, 5, 3, 1]).tolist(), [1, 3, 5, 5, 5])
-    assert_list_items(eof.eo_cummax([1, 3, np.nan, 5, 1]).tolist(), [1, 3, np.nan, 5, 5])
-    assert_list_items(eof.eo_cummax([1, 3, np.nan, 5, 1], ignore_nodata=False).tolist(),
-                      [1, 3, np.nan, np.nan, np.nan])
-
-
-def test_cummin():
-    assert_list_items(eof.eo_cummin([5, 3, 1, 3, 5]).tolist(), [5, 3, 1, 1, 1])
-    assert_list_items(eof.eo_cummin([5, 3, np.nan, 1, 5]).tolist(), [5, 3, np.nan, 1, 1])
-    assert_list_items(eof.eo_cummin([5, 3, np.nan, 1, 5], ignore_nodata=False).tolist(),
-                      [5, 3, np.nan, np.nan, np.nan])
-
-
-def test_cumproduct():
-    assert_list_items(eof.eo_cumproduct([1, 3, 5, 3, 1]).tolist(), [1, 3, 15, 45, 45])
-    assert_list_items(eof.eo_cumproduct([1, 2, 3, np.nan, 3, 1]).tolist(), [1, 2, 6, np.nan, 18, 18])
-    assert_list_items(eof.eo_cumproduct([1, 2, 3, np.nan, 3, 1], ignore_nodata=False).tolist(),
-                      [1, 2, 6, np.nan, np.nan, np.nan])
-
-
-def test_cumsum():
-    assert_list_items(eof.eo_cumsum([1, 3, 5, 3, 1]).tolist(), [1, 4, 9, 12, 13])
-    assert_list_items(eof.eo_cumsum([1, 3, np.nan, 3, 1]).tolist(), [1, 4, np.nan, 7, 8])
-    assert_list_items(eof.eo_cumsum([1, 3, np.nan, 3, 1], ignore_nodata=False).tolist(),
-                      [1, 4, np.nan, np.nan, np.nan])
-
-
-def test_linear_scale_range():
-    assert eof.eo_linear_scale_range(0.3, input_min=-1, input_max=1, output_min=0, output_max=255) == 165.75
-    assert eof.eo_linear_scale_range(25.5, input_min=0, input_max=255) == 0.1
-    assert np.isnan(eof.eo_linear_scale_range(np.nan, input_min=0, input_max=100))
-
-
-def test_apply_factor():
-    arr = np.random.randn(10)
-    assert np.any(eof.eo_apply_factor(arr) == arr)
-
-
-def test_extrema():
-    assert_list_items(eof.eo_extrema([1, 0, 3, 2]), [0, 3])
-    assert_list_items(eof.eo_extrema([5, 2.5, np.nan, -0.7]), [-0.7, 5])
-    assert_list_items(eof.eo_extrema([1, 0, 3, np.nan, 2], ignore_nodata=False), [np.nan, np.nan])
-    assert_list_items(eof.eo_extrema([]), [np.nan, np.nan])
-
-
-def test_sum():
-    assert eof.eo_sum([5, 1]) == 6
-    assert eof.eo_sum([-2, 4, 2.5]) == 4.5
-    assert np.isnan(eof.eo_sum([1, np.nan], ignore_nodata=False))
-
-
-def test_subtract():
-    assert eof.eo_subtract([5, 10], extra_values=[20]) == -25
-    assert eof.eo_subtract([5, 10]) == -5
-    assert eof.eo_subtract([-2, 4, -2]) == -4
-    assert np.isnan(eof.eo_subtract([1, np.nan], ignore_nodata=False))
-    C = np.ones((2, 5, 5)) * 100
-    assert np.sum(eof.eo_subtract(deepcopy(C))) == 0
-    assert np.sum(eof.eo_subtract(deepcopy(C), extra_values=[1])) == -1 * (5 * 5)
-    assert np.sum(eof.eo_subtract(deepcopy(C), extra_values=[1], extra_idxs=[0])) == -199 * (5 * 5)
-
-
-def test_multiply():
-    assert eof.eo_multiply([5, 0]) == 0
-    assert eof.eo_multiply([-2, 4, 2.5]) == -20
-    assert np.isnan(eof.eo_multiply([1, np.nan], ignore_nodata=False))
-    C = np.ones((2, 5, 5)) * 100
-    assert np.sum(eof.eo_multiply(C) - np.ones((5, 5)) * 10000) == 0
-    assert np.sum(eof.eo_multiply(deepcopy(C), extra_values=[2]) - np.ones((5, 5)) * 20000) == 0
-    assert np.sum(eof.eo_multiply(deepcopy(C), extra_values=[2, 3]) - np.ones((5, 5)) * 60000) == 0
-
-
-def test_divide():
-    assert eof.eo_divide([15, 5]) == 3
-    assert eof.eo_divide([-2, 4, 2.5]) == -0.2
-    assert np.isnan(eof.eo_divide([1, np.nan], ignore_nodata=False))
-    C = np.ones((2, 5, 5)) * 100
-    assert np.sum(eof.eo_divide(deepcopy(C), extra_values=[5], extra_idxs=[1]) - np.ones((5, 5)) * 0.2) == 0
-    assert eof.eo_divide([10, 2], extra_values=[5], extra_idxs=[1]) == 1
-    assert eof.eo_divide([10, 2], extra_values=[5, 10], extra_idxs=[1, 3]) == 0.1
-    assert eof.eo_divide([10, 2], extra_values=[5]) == 1
-
+from copy import deepcopy
+import openeo_processes as oeop
+
+
+class MathTester(unittest.TestCase):
+    """ Tests all math functions. """
+
+    def test_e(self):
+        """ Tests `e` function. """
+        assert oeop.e() == np.e
+
+    def test_pi(self):
+        """ Tests `pi` function. """
+        assert oeop.pi() == np.pi
+
+    def test_floor(self):
+        """ Tests `floor` function. """
+        assert oeop.floor(0) == 0
+        assert oeop.floor(3.5) == 3
+        assert oeop.floor(-0.4) == -1
+        assert oeop.floor(-3.5) == -4
+
+    def test_ceil(self):
+        """ Tests `ceil` function. """
+        assert oeop.ceil(0) == 0
+        assert oeop.ceil(3.5) == 4
+        assert oeop.ceil(-0.4) == 0
+        assert oeop.ceil(-3.5) == -3
+
+    def test_int(self):
+        """ Tests `int` function. """
+        assert oeop.int(0) == 0
+        assert oeop.int(3.5) == 3
+        assert oeop.int(-0.4) == 0
+        assert oeop.int(-3.5) == -3
+
+    def test_round(self):
+        """ Tests `round` function. """
+        assert oeop.round(0) == 0
+        assert oeop.round(3.56, p=1) == 3.6
+        assert oeop.round(-0.4444444, p=2) == -0.44
+        assert oeop.round(-2.5) == -2
+        assert oeop.round(-3.5) == -4
+        assert oeop.round(1234.5, p=-2) == 1200
+
+    def test_exp(self):
+        """ Tests `exp` function. """
+        assert oeop.exp(0) == 1
+        assert np.isnan(oeop.exp(np.nan))
+
+    def test_log(self):
+        """ Tests `log` function. """
+        assert oeop.log(10, 10) == 1
+        assert oeop.log(2, 2) == 1
+        assert oeop.log(4, 2) == 2
+        assert oeop.log(1, 16) == 0
+
+    def test_ln(self):
+        """ Tests `ln` function. """
+        assert oeop.ln(oeop.e()) == 1
+        assert oeop.ln(1) == 0
+
+    def test_cos(self):
+        """ Tests `cos` function. """
+        assert oeop.cos(0) == 1
+
+    def test_arccos(self):
+        """ Tests `arccos` function. """
+        assert oeop.arccos(1) == 0
+
+    def test_cosh(self):
+        """ Tests `cosh` function. """
+        assert oeop.cosh(0) == 1
+
+    def test_arcosh(self):
+        """ Tests `arcosh` function. """
+        assert oeop.arcosh(1) == 0
+
+    def test_sin(self):
+        """ Tests `sin` function. """
+        assert oeop.sin(0) == 0
+
+    def test_arcsin(self):
+        """ Tests `arcsin` function. """
+        assert oeop.arcsin(0) == 0
+
+    def test_sinh(self):
+        """ Tests `sinh` function. """
+        assert oeop.sinh(0) == 0
+
+    def test_arsinh(self):
+        """ Tests `arsinh` function. """
+        assert oeop.arsinh(0) == 0
+
+    def test_tan(self):
+        """ Tests `tan` function. """
+        assert oeop.tan(0) == 0
+
+    def test_arctan(self):
+        """ Tests `arctan` function. """
+        assert oeop.arctan(0) == 0
+
+    def test_tanh(self):
+        """ Tests `tanh` function. """
+        assert oeop.tanh(0) == 0
+
+    def test_artanh(self):
+        """ Tests `artanh` function. """
+        assert oeop.artanh(0) == 0
+
+    def test_arctan2(self):
+        """ Tests `arctan2` function. """
+        assert oeop.arctan2(0, 0) == 0
+        assert np.isnan(oeop.arctan2(np.nan, 1.5))
+
+    def test_linear_scale_range(self):
+        """ Tests `linear_scale_range` function. """
+        assert oeop.linear_scale_range(0.3, input_min=-1, input_max=1, output_min=0, output_max=255) == 165.75
+        assert oeop.linear_scale_range(25.5, input_min=0, input_max=255) == 0.1
+        assert np.isnan(oeop.linear_scale_range(np.nan, input_min=0, input_max=100))
+
+    def test_scale(self):
+        """ Tests `scale` function. """
+        arr = np.random.randn(10)
+        assert np.all(oeop.scale(arr) == arr)
+
+    def test_mod(self):
+        """ Tests `mod` function. """
+        assert oeop.mod(27, 5) == 2
+        assert oeop.mod(-27, 5) == 3
+        assert oeop.mod(27, -5) == -3
+        assert oeop.mod(-27, -5) == -2
+        assert oeop.mod(27, 5) == 2
+        assert np.isnan(oeop.mod(27, np.nan))
+        assert np.isnan(oeop.mod(np.nan, 5))
+
+    def test_absolute(self):
+        """ Tests `absolute` function. """
+        assert oeop.absolute(0) == 0
+        assert oeop.absolute(3.5) == 3.5
+        assert oeop.absolute(-0.4) == 0.4
+        assert oeop.absolute(-3.5) == 3.5
+
+    def test_sgn(self):
+        """ Tests `sgn` function. """
+        assert oeop.sgn(-2) == -1
+        assert oeop.sgn(3.5) == 1
+        assert oeop.sgn(0) == 0
+        assert np.isnan(oeop.sgn(np.nan))
+
+    def test_sqrt(self):
+        """ Tests `sqrt` function. """
+        assert oeop.sqrt(0) == 0
+        assert oeop.sqrt(1) == 1
+        assert oeop.sqrt(9) == 3
+        assert np.isnan(oeop.sqrt(np.nan))
+
+    def test_power(self):
+        """ Tests `power` function. """
+        assert oeop.power(0, 2) == 0
+        assert oeop.power(2.5, 0) == 1
+        assert oeop.power(3, 3) == 27
+        assert oeop.round(oeop.power(5, -1), 1) == 0.2
+        assert oeop.power(1, 0.5) == 1
+        assert oeop.power(1, None) is None
+        assert oeop.power(None, 2) is None
+
+    def test_mean(self):
+        """ Tests `mean` function. """
+        assert oeop.mean([1, 0, 3, 2]) == 1.5
+        assert oeop.mean([9, 2.5, np.nan, -2.5]) == 3
+        assert np.isnan(oeop.mean([1, np.nan], ignore_nodata=False))
+        assert np.isnan(oeop.mean([]))
+
+    def test_min(self):
+        """ Tests `min` function. """
+        assert oeop.min([1, 0, 3, 2]) == 0
+        assert oeop.min([5, 2.5, np.nan, -0.7]) == -0.7
+        assert np.isnan(oeop.min([1, 0, 3, np.nan, 2], ignore_nodata=False))
+        assert np.isnan(oeop.min([np.nan, np.nan]))
+
+    def test_max(self):
+        """ Tests `max` function. """
+        assert oeop.max([1, 0, 3, 2]) == 3
+        assert oeop.max([5, 2.5, np.nan, -0.7]) == 5
+        assert np.isnan(oeop.max([1, 0, 3, np.nan, 2], ignore_nodata=False))
+        assert np.isnan(oeop.max([np.nan, np.nan]))
+
+    def test_median(self):
+        """ Tests `median` function. """
+        assert oeop.median([1, 3, 3, 6, 7, 8, 9]) == 6
+        assert oeop.median([1, 2, 3, 4, 5, 6, 8, 9]) == 4.5
+        assert oeop.median([-1, -0.5, np.nan, 1]) == -0.5
+        assert np.isnan(oeop.median([-1, 0, np.nan, 1], ignore_nodata=False))
+        assert np.isnan(oeop.median([]))
+
+    def test_sd(self):
+        """ Tests `sd` function. """
+        assert oeop.sd([-1, 1, 3, np.nan]) == 2
+        assert np.isnan(oeop.sd([-1, 1, 3, np.nan], ignore_nodata=False))
+        assert np.isnan(oeop.sd([]))
+
+    def test_variance(self):
+        """ Tests `variance` function. """
+        assert oeop.variance([-1, 1, 3]) == 4
+        assert oeop.variance([2, 3, 3, np.nan, 4, 4, 5]) == 1.1
+        assert np.isnan(oeop.variance([-1, 1, np.nan, 3], ignore_nodata=False))
+        assert np.isnan(oeop.variance([]))
+
+    def test_extrema(self):
+        """ Tests `extrema` function. """
+        self.assertListEqual(oeop.extrema([1, 0, 3, 2]), [0, 3])
+        self.assertListEqual(oeop.extrema([5, 2.5, np.nan, -0.7]), [-0.7, 5])
+        assert np.isclose(oeop.extrema([1, 0, 3, np.nan, 2], ignore_nodata=False), [np.nan, np.nan],
+                          equal_nan=True).all()
+        assert np.isclose(oeop.extrema([]), [np.nan, np.nan], equal_nan=True).all()
+
+    def test_clip(self):
+        """ Tests `clip` function. """
+        assert oeop.clip(-5, min_x=-1, max_x=1) == -1
+        assert oeop.clip(10.001, min_x=1, max_x=10) == 10
+        assert oeop.clip(0.000001, min_x=0, max_x=0.02) == 0.000001
+        assert oeop.clip(None, min_x=0, max_x=1) is None
+
+        # test array clipping
+        assert np.isclose(oeop.clip([-2, -1, 0, 1, 2], min_x=-1, max_x=1), [-1, -1, 0, 1, 1], equal_nan=True).all()
+        assert np.isclose(oeop.clip([-0.1, -0.001, np.nan, 0, 0.25, 0.75, 1.001, np.nan], min_x=0, max_x=1),
+                          [0, 0, np.nan, 0, 0.25, 0.75, 1, np.nan], equal_nan=True).all()
+
+    def test_quantiles(self):
+        """ Tests `quantiles` function. """
+        quantiles_1 = oeop.quantiles(data=[2, 4, 4, 4, 5, 5, 7, 9], probabilities=[0.005, 0.01, 0.02, 0.05, 0.1, 0.5])
+        quantiles_1 = [oeop.round(quantile, p=2) for quantile in quantiles_1]
+        assert quantiles_1 == [2.07, 2.14, 2.28, 2.7, 3.4, 4.5]
+        quantiles_2 = oeop.quantiles(data=[2, 4, 4, 4, 5, 5, 7, 9], q=4)
+        quantiles_2 = [oeop.round(quantile, p=2) for quantile in quantiles_2]
+        assert quantiles_2 == [4, 4.5, 5.5]
+        quantiles_3 = oeop.quantiles(data=[-1, -0.5, np.nan, 1], q=2)
+        quantiles_3 = [oeop.round(quantile, p=2) for quantile in quantiles_3]
+        assert quantiles_3 == [-0.5]
+        quantiles_4 = oeop.quantiles(data=[-1, -0.5, np.nan, 1], q=4, ignore_nodata=False)
+        assert np.all([np.isnan(quantile) for quantile in quantiles_4]) and len(quantiles_4) == 3
+        quantiles_5 = oeop.quantiles(data=[], probabilities=[0.1, 0.5])
+        assert np.all([np.isnan(quantile) for quantile in quantiles_5]) and len(quantiles_5) == 2
+
+    def test_cummin(self):
+        """ Tests `cummin` function. """
+        self.assertListEqual(oeop.cummin([5, 3, 1, 3, 5]).tolist(), [5, 3, 1, 1, 1])
+        assert np.isclose(oeop.cummin([5, 3, np.nan, 1, 5]), [5, 3, np.nan, 1, 1], equal_nan=True).all()
+        assert np.isclose(oeop.cummin([5, 3, np.nan, 1, 5], ignore_nodata=False),
+                          [5, 3, np.nan, np.nan, np.nan], equal_nan=True).all()
+
+    def test_cummax(self):
+        """ Tests `cummax` function. """
+        self.assertListEqual(oeop.cummax([1, 3, 5, 3, 1]).tolist(), [1, 3, 5, 5, 5])
+        assert np.isclose(oeop.cummax([1, 3, np.nan, 5, 1]), [1, 3, np.nan, 5, 5], equal_nan=True).all()
+        assert np.isclose(oeop.cummax([1, 3, np.nan, 5, 1], ignore_nodata=False),
+                          [1, 3, np.nan, np.nan, np.nan], equal_nan=True).all()
+
+    def test_cumproduct(self):
+        """ Tests `cumproduct` function. """
+        self.assertListEqual(oeop.cumproduct([1, 3, 5, 3, 1]).tolist(), [1, 3, 15, 45, 45])
+        assert np.isclose(oeop.cumproduct([1, 2, 3, np.nan, 3, 1]), [1, 2, 6, np.nan, 18, 18], equal_nan=True).all()
+        assert np.isclose(oeop.cumproduct([1, 2, 3, np.nan, 3, 1], ignore_nodata=False),
+                          [1, 2, 6, np.nan, np.nan, np.nan], equal_nan=True).all()
+
+    def test_cumsum(self):
+        """ Tests `cumsum` function. """
+        self.assertListEqual(oeop.cumsum([1, 3, 5, 3, 1]).tolist(), [1, 4, 9, 12, 13])
+        assert np.isclose(oeop.cumsum([1, 3, np.nan, 3, 1]), [1, 4, np.nan, 7, 8], equal_nan=True).all()
+        assert np.isclose(oeop.cumsum([1, 3, np.nan, 3, 1], ignore_nodata=False),
+                          [1, 4, np.nan, np.nan, np.nan], equal_nan=True).all()
+
+    def test_sum(self):
+        """ Tests `sum` function. """
+        assert oeop.sum([5, 1]) == 6
+        assert oeop.sum([-2, 4, 2.5]) == 4.5
+        assert np.isnan(oeop.sum([1, np.nan], ignore_nodata=False))
+
+    def test_product(self):
+        """ Tests `product` function. """
+        assert oeop.product([5, 0]) == 0
+        assert oeop.product([-2, 4, 2.5]) == -20
+        assert np.isnan(oeop.product([1, np.nan], ignore_nodata=False))
+        assert oeop.product([-1]) == -1
+        assert np.isnan(oeop.product([np.nan], ignore_nodata=False))
+        assert np.isnan(oeop.product([]))
+
+        C = np.ones((2, 5, 5)) * 100
+        assert np.sum(oeop.product(C) - np.ones((5, 5)) * 10000) == 0
+        assert np.sum(oeop.product(deepcopy(C), extra_values=[2]) - np.ones((5, 5)) * 20000) == 0
+        assert np.sum(oeop.product(deepcopy(C), extra_values=[2, 3]) - np.ones((5, 5)) * 60000) == 0
+
+    def test_add(self):
+        """ Tests `add` function. """
+        assert oeop.add(5, 2.5) == 7.5
+        assert oeop.add(-2, -4) == -6
+        assert oeop.add(1, None) is None
+
+    def test_subtract(self):
+        """ Tests `subtract` function. """
+        assert oeop.subtract(5, 2.5) == 2.5
+        assert oeop.subtract(-2, 4) == -6
+        assert oeop.subtract(1, None) is None
+
+    def test_multiply(self):
+        """ Tests `multiply` function. """
+        assert oeop.multiply(5, 2.5) == 12.5
+        assert oeop.multiply(-2, -4) == 8
+        assert oeop.multiply(1, None) is None
+
+    def test_divide(self):
+        """ Tests `divide` function. """
+        assert oeop.divide(5, 2.5) == 2.
+        assert oeop.divide(-2, 4) == -0.5
+        assert oeop.divide(1, None) is None
+
+    # TODO: add test
+    def test_normalized_difference(self):
+        """ Tests `normalized_difference` function. """
+        pass
 
 if __name__ == "__main__":
-    test_e()
-    test_pi()
-    test_int()
-    test_floor()
-    test_ceil()
-    test_round()
-    test_min()
-    test_max()
-    test_mean()
-    test_median()
-    test_sd()
-    test_variance()
-    test_quantiles()
-    test_mod()
-    test_absolute()
-    test_power()
-    test_sgn()
-    test_sqrt()
-    test_exp()
-    test_ln()
-    test_log()
-    test_cos()
-    test_arccos()
-    test_cosh()
-    test_arcosh()
-    test_sin()
-    test_arcsin()
-    test_sinh()
-    test_arsinh()
-    test_tan()
-    test_arctan()
-    test_tanh()
-    test_artanh()
-    test_arctan2()
-    test_cummax()
-    test_cummin()
-    test_cumproduct()
-    test_cumsum()
-    test_linear_scale_range()
-    test_apply_factor()
-    test_extrema()
-    test_sum()
-    test_subtract()
-    test_multiply()
-    test_divide()
+    unittest.main()

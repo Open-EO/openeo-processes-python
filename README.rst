@@ -1,13 +1,13 @@
 ===========
-eoFunctions
+openeo_processes
 ===========
 
 
-eoFunctions is a Python representation of the openEO processes.
+openeo_processes is a Python representation of the openEO processes.
 
 The list supported here tries to be as complete as possible, but some processes (typically the 'cube' ones) are intrinsically connected to the back-end implementation and data model, and therefore are omitted here. Examples of missing processes are 'load_collection' or 'merge_cubes'.
 
-Processes are currently aligned with openEO API version 0.4.x .
+Processes are currently aligned with openEO API version 1.0.
 
 Installation
 ============
@@ -20,8 +20,8 @@ Installation
   wget https://repo.continuum.io/miniconda/Miniconda3-latest-Linux-x86_64.sh -O miniconda.sh
   bash miniconda.sh -b -p $HOME/miniconda
   export PATH="$HOME/miniconda/bin:$PATH"
-  git clone https://git.eodc.eu/eodc/eoDataReaders.git
-  cd eoDataReaders
+  git clone https://github.com/Open-EO/openeo-processes-python.git
+  cd openeo-processes-python
 
   This script adds ``$HOME/miniconda/bin`` temporarily to the ``PATH`` to do this
   permanently add ``export PATH="$HOME/miniconda/bin:$PATH"`` to your ``.bashrc``
@@ -39,7 +39,7 @@ Installation
 
 ::
 
-  source activate eofunctions
+  source activate openeo_processes
   python setup.py install
   python setup.py test
   
@@ -50,7 +50,7 @@ Change 'install' with 'develop' if you plan to further develop the package.
 
 ::
 
-  source activate eofunctions
+  source activate openeo_processes
   python setup.py test
 
 

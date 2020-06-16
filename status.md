@@ -1,0 +1,1 @@
+- what no data value should be used? Currently None is used for numbers and np.nan for everything else

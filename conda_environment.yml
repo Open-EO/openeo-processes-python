@@ -1,6 +1,5 @@
-name: eofunctions
+name: openeo_processes
 channels:
-- conda-forge
 - defaults
 dependencies:
 - python=3.6
