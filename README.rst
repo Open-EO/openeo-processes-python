@@ -1,6 +1,6 @@
-===========
+================
 openeo_processes
-===========
+================
 
 
 openeo_processes is a Python representation of the openEO processes.
@@ -12,46 +12,39 @@ Processes are currently aligned with openEO API version 1.0.
 Installation
 ============
 
-1. Install miniconda and clone repository:
-------------------------------------------
+1. At the moment, this package is only installable from source.
+   So start with cloning the repository::
 
-::
+        git clone https://github.com/Open-EO/openeo-processes-python.git
+        cd openeo-processes-python
 
-  wget https://repo.continuum.io/miniconda/Miniconda3-latest-Linux-x86_64.sh -O miniconda.sh
-  bash miniconda.sh -b -p $HOME/miniconda
-  export PATH="$HOME/miniconda/bin:$PATH"
-  git clone https://github.com/Open-EO/openeo-processes-python.git
-  cd openeo-processes-python
+2. It is recommended to install this package in a virtual environment,
+   e.g. by using ``venv`` (from the Python standard library), ``virtualenv``,
+   a conda environment, ...
+   For example, to create a *new* virtual environment using ``venv``
+   (in a folder called ``.venv``) and to activate it::
 
-  This script adds ``$HOME/miniconda/bin`` temporarily to the ``PATH`` to do this
-  permanently add ``export PATH="$HOME/miniconda/bin:$PATH"`` to your ``.bashrc``
-  or ``.zshrc``
+        python3 -m venv .venv
+        source .venv/bin/activate
 
-2. Create the conda environment
--------------------------------
+   (You might want to use a different bootstrap python executable
+   instead of ``python3`` in this example.)
 
-::
+3. Install the package in the virtual environment using one of the following ways,
+   as you prefer:
 
-  conda env create -f conda_environment.yml
+   - traditional way: ``python setup.py install``
+   - with pip: ``pip install .``
+   - if you plan to do development on the package itself,
+     install it in "development" mode with
+     ``python setup.py develop`` or ``pip install -e .``
+
+   (Note that in this step we are using python and pip from the virtual environment.)
+
+4. Optionally run the tests::
+
+        python setup.py test
   
-3. Install package in the conda environment
---------------------------------------------------------
-
-::
-
-  source activate openeo_processes
-  python setup.py install
-  python setup.py test
-  
-Change 'install' with 'develop' if you plan to further develop the package.
-
-4. Run tests
---------------------------------------------------------
-
-::
-
-  source activate openeo_processes
-  python setup.py test
 
 
 Note
