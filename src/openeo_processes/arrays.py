@@ -109,7 +109,7 @@ class ArrayElement:
         pass
 
     @staticmethod
-    def exec_np(data, index=0, label=None, dimension=0, return_nodata=False):
+    def exec_np(data, index=None, label=None, dimension=0, return_nodata=False):
         """
         Returns the element with the specified index or label from the array. Either the parameter `index` or `label`
         must be specified, otherwise the `ArrayElementParameterMissing` exception is thrown. If both parameters are set
