@@ -9,6 +9,7 @@ from openeo_processes.comparison import is_empty
 from openeo_processes.errors import ArrayElementNotAvailable
 from openeo_processes.errors import ArrayElementParameterMissing
 from openeo_processes.errors import ArrayElementParameterConflict
+from openeo_processes.errors import GenericError
 
 ########################################################################################################################
 # Array Contains Process
@@ -109,7 +110,7 @@ class ArrayElement:
         pass
 
     @staticmethod
-    def exec_np(data, index=None, label=None, dimension=0, return_nodata=False):
+    def exec_np(data, index=None, label=None, dimension=0, return_nodata=False, labels=None):
         """
         Returns the element with the specified index or label from the array. Either the parameter `index` or `label`
         must be specified, otherwise the `ArrayElementParameterMissing` exception is thrown. If both parameters are set
@@ -128,6 +129,8 @@ class ArrayElement:
         return_nodata : bool, optional
             By default this process throws an `ArrayElementNotAvailable` exception if the index or label is invalid.
             If you want to return np.nan instead, set this flag to `True`.
+        labels : np.array, optional
+            The available labels.
 
         Returns
         -------
@@ -144,8 +147,10 @@ class ArrayElement:
             Only `index` or `labels` allowed to be set.
 
         """
-        ArrayElement._check_input(index, label)
-
+        ArrayElement._check_input(index, label, labels)
+        if label:
+            # Convert label to index, using labels
+            index = labels.tolist().index(label)
         if index >= data.shape[dimension]:
             if not return_nodata:
                 raise ArrayElementNotAvailable()
@@ -166,7 +171,7 @@ class ArrayElement:
         pass
 
     @staticmethod
-    def _check_input(index, label):
+    def _check_input(index, label, labels):
         """
         Checks if `index` and `label` are given correctly.
 
@@ -179,6 +184,8 @@ class ArrayElement:
             The zero-based index of the element to retrieve (default is 0).
         label : int or str, optional
             The label of the element to retrieve.
+        labels : np.array, optional
+            The available labels.
 
         Raises
         ------
@@ -193,6 +200,10 @@ class ArrayElement:
 
         if index is None and label is None:
             raise ArrayElementParameterMissing()
+        
+        if label and labels is None:
+            msg = "Parameter 'labels' is needed when specifying input parameter 'label'."
+            raise GenericError(msg)
 
 
 ########################################################################################################################

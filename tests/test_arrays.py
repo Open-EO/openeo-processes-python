@@ -24,6 +24,7 @@ class ArrayTester(unittest.TestCase):
 
     def test_array_element(self):
         """ Tests `array_element` function. """
+        assert oeop.array_element([9, 8], label="B", labels=np.array(["A", "B"])) == 8
         assert oeop.array_element([9, 8, 7, 6, 5], index=2) == 7
         assert oeop.array_element(["A", "B", "C"], index=0) == "A"
         assert np.isnan(oeop.array_element([], index=0, return_nodata=True))
