@@ -1,5 +1,5 @@
 import xarray
-import dask
+import dask.array
 import datetime
 import re
 import numpy as np
