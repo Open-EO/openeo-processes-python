@@ -1,26 +1,63 @@
 import unittest
+
+import numpy as np
 import openeo_processes as oeop
+import pytest
+
+
+@pytest.mark.parametrize(["value", "expected"], [
+    # Based on https://github.com/Open-EO/openeo-processes/issues/189
+    (None, True),
+    (np.nan, True),
+    (0, False),
+    (1, False),
+    (np.inf, False),
+    ("a string", True),
+    ([1, 2], True),
+    ([None, None], True),
+    ([np.nan, np.nan], True),
+])
+def test_is_nan(value, expected):
+    """ Tests `is_nan` function. """
+    assert oeop.is_nan(value) == expected
+
+
+@pytest.mark.parametrize(["value", "expected"], [
+    # Based on https://github.com/Open-EO/openeo-processes/issues/189
+    (None, True),
+    (np.nan, False),
+    (0, False),
+    (1, False),
+    (np.inf, False),
+    ("a string", False),
+    ([1, 2], False),
+    ([None, None], False),
+    ([np.nan, np.nan], False),
+])
+def test_is_nodata(value, expected):
+    """ Tests `is_nodata` function. """
+    assert oeop.is_nodata(value) == expected
+
+
+@pytest.mark.parametrize(["value", "expected"], [
+    # Based on https://github.com/Open-EO/openeo-processes/issues/189
+    (None, False),
+    (np.nan, False),
+    (0, True),
+    (1, True),
+    (np.inf, False),
+    ("a string", True),
+    ([1, 2], True),
+    ([None, None], True),
+    ([np.nan, np.nan], True),
+])
+def test_is_valid(value, expected):
+    """ Tests `is_valid` function. """
+    assert oeop.is_valid(value) == expected
 
 
 class ComparisonTester(unittest.TestCase):
     """ Tests all comparison functions. """
-
-    def test_is_nan(self):
-        """ Tests `is_nan` function. """
-        assert not oeop.is_nan(1)
-        assert oeop.is_nan('Test')
-
-    def test_is_nodata(self):
-        """ Tests `is_nodata` function. """
-        assert not oeop.is_nodata(1)
-        assert not oeop.is_nodata('Test')
-        assert oeop.is_nodata(None)
-
-    def test_is_valid(self):
-        """ Tests `is_valid` function. """
-        assert oeop.is_valid(1)
-        assert oeop.is_valid('Test')
-        assert not oeop.is_valid(None)
 
     def test_eq(self):
         """ Tests `eq` function. """
