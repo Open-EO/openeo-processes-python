@@ -1,6 +1,3 @@
-import xarray
-import dask.array
-import datetime
 import re
 import numpy as np
 from datetime import timezone
@@ -12,14 +9,12 @@ def eval_datatype(data):
     """
     Returns a data type tag depending on the data type of `data`.
     This can be:
-        - "np": `np.ndarray` or list (list are directly converted to numpy arrays)
-        - "xar": `xarray.DataArray`
-        - "dar": `dask.array.core.Array`
-        - "num": `np.integer`, `np.float`, int, float, or str
-        - "dt": `datetime.datetime`
-        - "dict": dict
-        - "fun": callable object
-        - "none": None
+        - "numpy": `nump.ndarray`
+        - "xarray": `xarray.DataArray`
+        - "dask": `dask.array.core.Array`
+        - "int", "float", "dict", "list", "set", "tuple", "NoneType": Python builtins
+        - "datetime": `datetime.datetime`
+        - "function": callable object
 
     Parameters
     ----------
@@ -32,37 +27,14 @@ def eval_datatype(data):
         Data type tag.
 
     """
-    is_list = isinstance(data, list)
-    is_np = isinstance(data, np.ndarray) | is_list
-    is_xar = isinstance(data, xarray.DataArray)
-    is_dar = isinstance(data, dask.array.core.Array)
-    is_num = isinstance(data, (int, float, str, np.integer, np.float))
-    is_datetime = isinstance(data, datetime)
-    is_dict = isinstance(data, dict)
-    is_function = callable(data)
-    is_none = data is None
-
-    if is_np:
-        datatype = "np"
-    elif is_xar:
-        datatype = "xar"
-    elif is_dar:
-        datatype = "dar"
-    elif is_num:
-        datatype = "num"
-    elif is_none:
-        datatype = "none"
-    elif is_datetime:
-        datatype = "dt"
-    elif is_dict:
-        datatype = "dict"
-    elif is_function:
-        datatype = "fun"
+    package = type(data).__module__
+    package_root = package.split(".", 1)[0]
+    if package in ("builtins", "datetime"):
+        return type(data).__name__
+    elif package_root in ("numpy", "xarray", "dask"):
+        return package_root
     else:
-        err_msg = "Data type '{}' is unknown.".format(type(data))
-        raise ValueError(err_msg)
-
-    return datatype
+        return package + '.' + type(data).__name__
 
 
 def process(processor):
@@ -84,29 +56,20 @@ def process(processor):
     def fun_wrapper(*args, **kwargs):
         cls = processor()
 
-        datatypes = []
-        # retrieve data types of input arguments and convert lists to numpy arrays
-        args = list(args)
-        for i, arg in enumerate(args):
-            datatypes.append(eval_datatype(arg))
-            if isinstance(arg, list):
-                args[i] = list2nparray(arg)
-        args = tuple(args)
+        # Convert lists to numpy arrays
+        args = tuple(list2nparray(a) if isinstance(a, list) else a for a in args)
+        kwargs = {k: (list2nparray(v) if isinstance(v, list) else v) for k, v in kwargs.items()}
 
-        # retrieve data types of input keyword arguments and convert lists to numpy arrays
-        for key, kwarg in kwargs.items():
-            datatypes.append(eval_datatype(kwarg))
-            if isinstance(kwarg, list):
-                kwargs[key] = list2nparray(kwarg)
-
-        datatypes = np.array(datatypes)
-        if (datatypes == "np").any():
+        # retrieve data types of input (keyword) arguments
+        datatypes = set(eval_datatype(a) for a in args)
+        datatypes.update(eval_datatype(v) for v in kwargs.values())
+        if "numpy" in datatypes:
             cls_fun = getattr(cls, "exec_np")
-        elif (datatypes == "xar").any():
+        elif "xarray" in datatypes:
             cls_fun = getattr(cls, "exec_xar")
-        elif (datatypes == "dar").any():
+        elif "dask" in datatypes:
             cls_fun = getattr(cls, "exec_dar")
-        elif ((datatypes == "num") | (datatypes == "none") | (datatypes == "dt")).all():
+        elif datatypes.issubset({"int", "float", "NoneType", "str", "bool", "datetime"}):
             cls_fun = getattr(cls, "exec_num")
         else:
             raise Exception('Datatype unknown.')

@@ -1,6 +1,10 @@
-import numpy as np
-import xarray_extras as xar_addons
 import builtins
+import numpy as np
+
+try:
+    import xarray_extras as xar_addons
+except ImportError:
+    xar_addons = None
 
 from openeo_processes.utils import process
 from openeo_processes.comparison import is_empty

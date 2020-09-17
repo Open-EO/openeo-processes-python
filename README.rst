@@ -30,16 +30,27 @@ Installation
    (You might want to use a different bootstrap python executable
    instead of ``python3`` in this example.)
 
-3. Install the package in the virtual environment using one of the following ways,
-   as you prefer:
+3.  Install the package in the virtual environment,
+    preferably through ``pip`` of your virtual environment::
 
-   - traditional way: ``python setup.py install``
-   - with pip: ``pip install .``
-   - if you plan to do development on the package itself,
-     install it in "development" mode with
-     ``python setup.py develop`` or ``pip install -e .``
+        pip install .
 
-   (Note that in this step we are using python and pip from the virtual environment.)
+    If you plan to do development on the package itself,
+    install it in "development" mode with::
+
+        pip install -e .
+
+    If plan to process xarray or dask arrays, you probably
+    have the corresponding libraries already installed in your virtual env,
+    and ``openeo_processes`` will handle them appropriately out of the box.
+    You can however also explicitly pull these libraries in as "extra" dependencies
+    when installing ``openeo_processes``.
+    For example with one of the following install commands::
+
+        pip install .[dask]
+        pip install .[xarray]
+        pip install .[dask,xarray]
+
 
 4. Optionally run the tests::
 
