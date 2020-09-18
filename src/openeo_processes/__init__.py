@@ -13,3 +13,4 @@ from openeo_processes.arrays import *
 from openeo_processes.comparison import *
 from openeo_processes.math import *
 from openeo_processes.texts import *
+from openeo_processes.utils import get_process, has_process

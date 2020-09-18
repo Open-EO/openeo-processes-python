@@ -1,8 +1,9 @@
+import functools
 import re
+from datetime import timezone, timedelta, datetime
+from typing import Callable
+
 import numpy as np
-from datetime import timezone
-from datetime import timedelta
-from datetime import datetime
 
 
 def eval_datatype(data):
@@ -37,6 +38,10 @@ def eval_datatype(data):
         return package + '.' + type(data).__name__
 
 
+# Registry of processes (dict mapping process id to wrapped process implementation).
+_processes = {}
+
+
 def process(processor):
     """
     This function serves as a decorator for empty openEO process definitions, which call a class `processor` defining
@@ -53,6 +58,7 @@ def process(processor):
         Process/function wrapper returning the result of the process.
 
     """
+    @functools.wraps(processor)
     def fun_wrapper(*args, **kwargs):
         cls = processor()
 
@@ -76,7 +82,44 @@ def process(processor):
 
         return cls_fun(*args, **kwargs)
 
+    _processes[processor.__name__] = fun_wrapper
+
     return fun_wrapper
+
+
+def has_process(process_id: str) -> bool:
+    """
+    Check if the given process is defined
+
+    Parameters
+    ----------
+    process_id : str
+           Process id
+
+    Returns
+    -------
+    True if the process is defined, False otherwise
+    """
+    return process_id in _processes
+
+
+def get_process(process_id: str) -> Callable:
+    """
+    Get the function corresponding with given process id
+
+    Parameters
+    ----------
+    process_id : str
+           Process id
+
+    Returns
+    -------
+    Python function (callable) that wraps the process
+    """
+    return _processes[process_id]
+
+
+
 
 
 def list2nparray(x):
