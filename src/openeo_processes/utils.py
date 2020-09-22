@@ -82,7 +82,8 @@ def process(processor):
 
         return cls_fun(*args, **kwargs)
 
-    _processes[processor.__name__] = fun_wrapper
+    process_id = processor.__name__.rstrip('_')
+    _processes[process_id] = fun_wrapper
 
     return fun_wrapper
 

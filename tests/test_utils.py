@@ -32,12 +32,22 @@ def test_has_process():
     assert has_process("add")
     assert has_process("multiply")
     assert not has_process("foobar")
+    assert has_process("and")
+    assert not has_process("and_")
+    assert has_process("or")
+    assert not has_process("or_")
+    assert has_process("if")
+    assert not has_process("if_")
 
 
-def test_get_process():
-    fun = get_process("add")
-    assert fun(2, 3) == 5
-    fun = get_process("multiply")
-    assert fun(2, 3) == 6
-    fun = get_process("sum")
-    assert fun([1, 2, 3, 4, 5, 6]) == 21
+@pytest.mark.parametrize(["pid", "args", "expected"], [
+    ("add", (2, 3), 5),
+    ("multiply", (2, 3), 6),
+    ("sum", ([1, 2, 3, 4, 5, 6],), 21),
+    ("median", ([2, 5, 3, 8, 11],), 5),
+    ("and", (False, True), False),
+    ("or", (False, True), True),
+])
+def test_get_process(pid, args, expected):
+    fun = get_process(pid)
+    assert fun(*args) == expected

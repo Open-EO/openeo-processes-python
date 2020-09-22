@@ -47,6 +47,7 @@ MANIFEST
 
 # Per-project virtualenvs
 .venv*/
+venv*/
 
 # folder including testing scripts
 .scripts
