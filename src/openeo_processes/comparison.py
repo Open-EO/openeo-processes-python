@@ -1,7 +1,7 @@
 import datetime
-import numpy as np
-import pandas as pd
+import math
 
+import numpy as np
 from openeo_processes.utils import process
 from openeo_processes.utils import str2time
 
@@ -22,10 +22,7 @@ def is_empty(data):
         True if object is emtpy, False if not.
 
     """
-    if len(data) == 0:
-        return True
-    else:
-        return False
+    return len(data) == 0
 
 
 ########################################################################################################################
@@ -91,15 +88,15 @@ class IsNodata:
         Attention! Since None values are not supported NumPy and Pandas, this method has the same behaviour as `is_nan`.
 
         """
-        return pd.isnull(x)
+        return IsNodata.exec_num(x)
 
     @staticmethod
-    def exec_xar():
-        pass
+    def exec_xar(x):
+        return IsNodata.exec_num(x)
 
     @staticmethod
-    def exec_da():
-        pass
+    def exec_da(x):
+        return IsNodata.exec_num(x)
 
 
 ########################################################################################################################
@@ -144,7 +141,7 @@ class IsNan:
             True if the data is a not a number, otherwise False.
 
         """
-        return np.isnan(x) if isinstance(x, (float, int)) else True
+        return (not isinstance(x, (int, float))) or math.isnan(x)
 
     @staticmethod
     def exec_np(x):
@@ -163,15 +160,15 @@ class IsNan:
             True if the data is a not a number, otherwise False.
 
         """
-        return pd.isnull(x)
+        return IsNan.exec_num(x)
 
     @staticmethod
-    def exec_xar():
-        pass
+    def exec_xar(x):
+        return IsNan.exec_num(x)
 
     @staticmethod
-    def exec_da():
-        pass
+    def exec_da(x):
+        return IsNan.exec_num(x)
 
 
 ########################################################################################################################
@@ -218,10 +215,11 @@ class IsValid:
             True if the data is valid, otherwise False.
 
         """
-        if x not in [np.nan, np.inf, None]:
-            return True
-        else:
+        if x is None:
             return False
+        elif isinstance(x, float):
+            return not (math.isnan(x) or math.isinf(x))
+        return True
 
     @staticmethod
     def exec_np(x):
@@ -242,18 +240,15 @@ class IsValid:
             True if the data is valid, otherwise False.
 
         """
-        if is_empty(x):
-            return False
-        else:
-            return ~pd.isnull(x) & (x != np.inf)
+        return IsValid.exec_num(x)
 
     @staticmethod
-    def exec_xar():
-        pass
+    def exec_xar(x):
+        return IsValid.exec_num(x)
 
     @staticmethod
-    def exec_da():
-        pass
+    def exec_da(x):
+        return IsValid.exec_num(x)
 
 
 ########################################################################################################################
