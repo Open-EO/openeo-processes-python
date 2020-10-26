@@ -49,10 +49,12 @@ class ArrayTester(unittest.TestCase):
     def test_count(self):
         """ Tests `count` function. """
         assert oeop.count([]) == 0
+        assert oeop.count([], condition=True) == 0
         assert oeop.count([1, 0, 3, 2]) == 4
         assert oeop.count(["ABC", np.nan]) == 1
         assert oeop.count([False, np.nan], condition=True) == 2
-        assert oeop.count([0, 1, 2, 3, 4, 5, np.nan], condition=oeop.gt, context={'y': 2})
+        assert oeop.count([0, 1, 2, 3, 4, 5, np.nan], condition=oeop.gt, context={'y': 2}) == 3
+        assert oeop.count([0, 1, 2, 3, 4, 5, np.nan], condition=oeop.lte, context={'y': 2}) == 3
 
     #TODO: add test
     def test_array_apply(self):
