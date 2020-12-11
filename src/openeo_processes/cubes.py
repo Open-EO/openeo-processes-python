@@ -39,7 +39,8 @@ class LoadCollection:
             'dask_chunks': dask_chunks,
             'x': x,
             'y': y,
-            'crs': crs
+            'crs': crs,
+            'time': time
         }
         if measurements:
             odc_params['measurements'] = measurements
