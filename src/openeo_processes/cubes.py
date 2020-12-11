@@ -31,10 +31,20 @@ class LoadCollection:
 
     @staticmethod
     def exec_odc(odc_cube, product: str, x: tuple, y: tuple, time: tuple,
-                 dask_chunks: dict, crs: str = "EPSG:4326"):
+                 dask_chunks: dict, measurements: list = [],
+                 crs: str = "EPSG:4326"):
 
-        datacube = odc_cube.load(product=product, dask_chunks=dask_chunks,
-                                 **{'x': x, 'y': y, 'time': time, 'crs': crs})
+        odc_params = {
+            'product': product,
+            'dask_chunks': dask_chunks,
+            'x': x,
+            'y': y,
+            'crs': crs
+        }
+        if measurements:
+            odc_params['measurements'] = measurements
+
+        datacube = odc_cube.load(**odc_params)
         # Convert to xr.DataArray
         # TODO: add conversion with multiple and custom dimensions
         datacube = datacube.to_array(dim='bands')

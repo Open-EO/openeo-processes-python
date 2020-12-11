@@ -69,14 +69,14 @@ def process(processor):
         # retrieve data types of input (keyword) arguments
         datatypes = set(eval_datatype(a) for a in args)
         datatypes.update(eval_datatype(v) for v in kwargs.values())
-        if "numpy" in datatypes:
+        if "datacube" in datatypes:
+            cls_fun = getattr(cls, "exec_odc")
+        elif "numpy" in datatypes:
             cls_fun = getattr(cls, "exec_np")
         elif "xarray" in datatypes:
             cls_fun = getattr(cls, "exec_xar")
         elif "dask" in datatypes:
             cls_fun = getattr(cls, "exec_dar")
-        elif "datacube" in datatypes:
-            cls_fun = getattr(cls, "exec_odc")
         elif datatypes.issubset({"int", "float", "NoneType", "str", "bool", "datetime"}):
             cls_fun = getattr(cls, "exec_num")
         else:
