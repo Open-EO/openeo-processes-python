@@ -42,7 +42,7 @@ class LoadCollection:
             'crs': crs,
             'time': time
         }
-        if measurements:
+        if len(measurements) > 0:
             odc_params['measurements'] = measurements
 
         datacube = odc_cube.load(**odc_params)
