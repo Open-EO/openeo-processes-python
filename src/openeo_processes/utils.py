@@ -32,7 +32,7 @@ def eval_datatype(data):
     package_root = package.split(".", 1)[0]
     if package in ("builtins", "datetime"):
         return type(data).__name__
-    elif package_root in ("numpy", "xarray", "dask"):
+    elif package_root in ("numpy", "xarray", "dask", "datacube"):
         return package_root
     else:
         return package + '.' + type(data).__name__
@@ -75,7 +75,7 @@ def process(processor):
             cls_fun = getattr(cls, "exec_xar")
         elif "dask" in datatypes:
             cls_fun = getattr(cls, "exec_dar")
-        elif "Datacube" in datatypes:
+        elif "datacube" in datatypes:
             cls_fun = getattr(cls, "exec_odc")
         elif datatypes.issubset({"int", "float", "NoneType", "str", "bool", "datetime"}):
             cls_fun = getattr(cls, "exec_num")
