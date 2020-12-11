@@ -75,6 +75,8 @@ def process(processor):
             cls_fun = getattr(cls, "exec_xar")
         elif "dask" in datatypes:
             cls_fun = getattr(cls, "exec_dar")
+        elif "Datacube" in datatypes:
+            cls_fun = getattr(cls, "exec_odc")
         elif datatypes.issubset({"int", "float", "NoneType", "str", "bool", "datetime"}):
             cls_fun = getattr(cls, "exec_num")
         else:
