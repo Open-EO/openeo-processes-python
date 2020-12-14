@@ -47,8 +47,10 @@ def test_data(request):
             self.xr_data_4d = xr.DataArray(data=self.np_data_4d,
                                            dims=self.coords_4d.keys(),
                                            coords=self.coords_4d)
+            self.xr_data_4d.attrs['crs'] = 'EPSG:4326'
             self.xr_data_3d = xr.DataArray(data=self.np_data_3d,
                                            dims=self.coords_3d.keys(),
                                            coords=self.coords_3d)
+            self.xr_data_3d.attrs['crs'] = 'EPSG:4326'
 
     request.cls.test_data = TestDataDriver()
