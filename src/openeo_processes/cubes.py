@@ -30,12 +30,12 @@ class LoadCollection:
     """
 
     @staticmethod
-    def exec_odc(odc_cube, product: str, x: tuple, y: tuple, time: tuple,
+    def exec_odc(odc_cube, reduce_dimension: str, x: tuple, y: tuple, time: tuple,
                  dask_chunks: dict, measurements: list = [],
                  crs: str = "EPSG:4326"):
 
         odc_params = {
-            'product': product,
+            'reduce_dimension': reduce_dimension,
             'dask_chunks': dask_chunks,
             'x': x,
             'y': y,
@@ -51,3 +51,63 @@ class LoadCollection:
         datacube = datacube.to_array(dim='bands')
 
         return datacube
+
+
+###############################################################################
+# Reduce dimension process
+###############################################################################
+
+
+@process
+def reduce_dimension():
+    """
+    Returns class instance of `reduce_dimension`.
+    For more details, please have a look at the implementations inside
+    `reduce_dimension`.
+
+    Returns
+    -------
+    reduce_dimension :
+        Class instance implementing all 'reduce_dimension' processes.
+
+    """
+    return ReduceDimension()
+
+
+class ReduceDimension:
+    """
+    Class implementing all 'reduce_dimension' processes.
+
+    """
+
+    @staticmethod
+    def exec_xar(data, reducer, dimension=None, context={}):
+        """
+
+
+        Parameters
+        ----------
+        data : xr.DataArray
+            An array of numbers. An empty array resolves always with np.nan.
+        reducer : callable or dict
+            the name of an existing process (e.g. `mean`) or a dict for a
+            process graph
+        dimension : str, optional
+            Defines the dimension to calculate the sum along (defaults to first
+            dimension if not specified). Dimensions are expected in this order:
+            (dim1, dim2, y, x)
+        context: dict, optional
+            keyworded parameters needed by the `reducer`
+
+        Returns
+        -------
+        xr.DataArray
+
+
+        """
+
+        if callable(reducer):
+            return reducer(data, dimension=dimension, **context)
+        elif isinstance(reducer, dict):
+            # No need to map this
+            return data
