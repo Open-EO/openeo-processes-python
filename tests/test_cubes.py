@@ -24,5 +24,12 @@ class CubesTester(unittest.TestCase):
             [14, 140]
             )
 
+    def test_save_result(self):
+        """ Tests `reduce_dimension` function. """
+
+        # xarray tests
+        oeop.save_result(self.test_data.xr_data_3d, "out.tif")
+
+
 if __name__ == "__main__":
     unittest.main()

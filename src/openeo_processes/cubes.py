@@ -1,4 +1,5 @@
 
+import rioxarray  # needed by save_result even if not directly called
 from openeo_processes.utils import process
 
 
@@ -111,3 +112,51 @@ class ReduceDimension:
         elif isinstance(reducer, dict):
             # No need to map this
             return data
+
+###############################################################################
+# Save result process
+###############################################################################
+
+
+@process
+def save_result():
+    """
+    Returns class instance of `save_result`.
+    For more details, please have a look at the implementations inside
+    `save_result`.
+
+    Returns
+    -------
+    save_result :
+        Class instance implementing all 'save_result' processes.
+
+    """
+    return SaveResult()
+
+
+class SaveResult:
+    """
+    Class implementing all 'reduce_dimension' processes.
+
+    """
+
+    @staticmethod
+    def exec_xar(data, output_filepath, format='GTiff', options={}):
+        """
+        Save data to disk in specified format.
+
+        Parameters
+        ----------
+        data : xr.DataArray
+            An array of numbers. An empty array resolves always with np.nan.
+        output_filepath: str
+            Full filepath where to store data on disk
+        format: str, optional
+            data format (default: GTiff)
+
+        """
+
+        # TODO
+        # Add check, this works only for 2D or 3D DataArrays, else loop is needed
+
+        data.rio.to_raster(raster_path=output_filepath, driver=format, **options)
