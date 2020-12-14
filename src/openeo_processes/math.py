@@ -3546,7 +3546,7 @@ class Sum:
             return np.nansum(data, axis=dimension) + summand
 
     @staticmethod
-    def exec_xar(data, ignore_nodata=True, dimension=0, extra_values=None):
+    def exec_xar(data, ignore_nodata=True, dimension=None, extra_values=None):
         """
         Sums up all elements in a sequential array of numbers and returns the computed sum. By default no-data values
         are ignored. Setting `ignore_nodata` to false considers no-data values so that np.nan is returned if any element
@@ -3560,8 +3560,10 @@ class Sum:
         ignore_nodata : bool, optional
             Indicates whether no-data values are ignored or not. Ignores them by default (=True).
             Setting this flag to False considers no-data values so that np.nan is returned if any value is such a value.
-        dimension : int, optional
-            Defines the dimension to calculate the sum along (default is 0).
+        dimension : str, optional
+            Defines the dimension to calculate the sum along (defaults to first
+            dimension if not specified). Dimensions are expected in this order:
+            (dim1, dim2, y, x)
         extra_values: list, optional
             Offers to add additional elements to the computed sum.
 
@@ -3586,7 +3588,10 @@ class Sum:
         else:
             summand = np.nansum(extra_values)
 
-        return data.sum(data, dim=dimension, skipna=~ignore_nodata) + summand
+        if not dimension:
+            dimension = data.dims[0]
+
+        return data.sum(dim=dimension, skipna=~ignore_nodata) + summand
 
     @staticmethod
     def exec_da():
@@ -3669,7 +3674,7 @@ class Product:
         return np.prod(data, axis=dimension, initial=multiplicand)
 
     @staticmethod
-    def exec_xar(data, ignore_nodata=True, dimension=0, extra_values=None):
+    def exec_xar(data, ignore_nodata=True, dimension=None, extra_values=None):
         """
         Multiplies all elements in a sequential array of numbers and returns the computed product. By default no-data
         values are ignored. Setting `ignore_nodata` to False considers no-data values so that np.nan is returned if any
@@ -3683,8 +3688,10 @@ class Product:
         ignore_nodata : bool, optional
             Indicates whether no-data values are ignored or not. Ignores them by default (=True).
             Setting this flag to False considers no-data values so that np.nan is returned if any value is such a value.
-        dimension : int, optional
-            Defines the dimension to calculate the product along (default is 0).
+        dimension : str, optional
+            Defines the dimension to calculate the sum along (defaults to first
+            dimension if not specified). Dimensions are expected in this order:
+            (dim1, dim2, y, x)
         extra_values: list, optional
             Offers to add additional elements to the computed sum.
 
@@ -3705,15 +3712,15 @@ class Product:
         if is_empty(data) and len(extra_values) == 0:
             return np.nan
 
-        if ignore_nodata:
-            data[np.isnan(data)] = 1.
-
         if len(extra_values) > 0:
             multiplicand = np.prod(extra_values)
         else:
             multiplicand = 1.
 
-        return data.prod(data, dim=dimension, skipna=~ignore_nodata) * multiplicand
+        if not dimension:
+            dimension = data.dims[0]
+
+        return data.prod(dim=dimension, skipna=ignore_nodata) * multiplicand
 
     @staticmethod
     def exec_da():
