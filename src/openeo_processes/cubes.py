@@ -31,11 +31,12 @@ class LoadCollection:
     """
 
     @staticmethod
-    def exec_odc(odc_cube, reduce_dimension: str, x: tuple, y: tuple, time: tuple,
+    def exec_odc(odc_cube, product, reduce_dimension: str, x: tuple, y: tuple, time: tuple,
                  dask_chunks: dict, measurements: list = [],
                  crs: str = "EPSG:4326"):
 
         odc_params = {
+            'product': product,
             'reduce_dimension': reduce_dimension,
             'dask_chunks': dask_chunks,
             'x': x,
