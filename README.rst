@@ -26,7 +26,7 @@ Installation
 
         python3 -m venv .venv
         source .venv/bin/activate
-        python -m pip install --user --upgrade pip
+        python -m pip install --upgrade pip
 
    (You might want to use a different bootstrap python executable
    instead of ``python3`` in this example.)
