@@ -2304,7 +2304,7 @@ class Min:
             return np.nanmin(data, axis=dimension)
 
     @staticmethod
-    def exec_xar(data, ignore_nodata=True, dimension=0):
+    def exec_xar(data, ignore_nodata=True, dimension=None):
         """
         Computes the smallest value of an array of numbers, which is is equal to the last element of a sorted
         (i.e., ordered) version the array.
@@ -2316,8 +2316,10 @@ class Min:
         ignore_nodata : bool, optional
             Indicates whether no-data values are ignored or not. Ignores them by default (=True).
             Setting this flag to False considers no-data values so that np.nan is returned if any value is such a value.
-        dimension : int, optional
-            Defines the dimension to calculate the minimum along (default is 0).
+        dimension : str, optional
+            Defines the dimension to calculate the sum along (defaults to first
+            dimension if not specified). Dimensions are expected in this order:
+            (dim1, dim2, y, x)
 
         Returns
         -------
@@ -2328,7 +2330,10 @@ class Min:
         if is_empty(data):
             return np.nan
 
-        return data.min(data, dim=dimension, skipna=~ignore_nodata)
+        if not dimension:
+            dimension = data.dims[0]
+
+        return data.min(dim=dimension, skipna=~ignore_nodata)
 
     @staticmethod
     def exec_da():
