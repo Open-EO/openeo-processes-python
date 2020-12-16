@@ -4,7 +4,7 @@ https://openeo.org/documentation/1.0/processes.html
 """
 
 import numpy as np
-import openeo_processes.arrays as oeop
+import openeo_processes as oeop
 import pytest
 import xarray as xr
 from unittest import TestCase
