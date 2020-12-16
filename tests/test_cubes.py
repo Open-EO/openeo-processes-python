@@ -36,5 +36,6 @@ class CubesTester(unittest.TestCase):
         os.remove(out_filename)
         # TODO imporve file check
 
+
 if __name__ == "__main__":
     unittest.main()
