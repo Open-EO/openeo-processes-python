@@ -3,6 +3,7 @@ Most tests are in alignment with:
 https://openeo.org/documentation/1.0/processes.html
 """
 
+import os
 import unittest
 import pytest
 import openeo_processes as oeop
@@ -28,8 +29,12 @@ class CubesTester(unittest.TestCase):
         """ Tests `reduce_dimension` function. """
 
         # xarray tests
-        oeop.save_result(self.test_data.xr_data_3d, "out.tif")
+        out_filename = "out.tif"
+        oeop.save_result(self.test_data.xr_data_3d, out_filename)
 
+        assert os.path.exists(out_filename)
+        os.remove(out_filename)
+        # TODO imporve file check
 
 if __name__ == "__main__":
     unittest.main()
