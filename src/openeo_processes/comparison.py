@@ -618,7 +618,7 @@ class Gt:
         ## x has to be a datacube, whereas y can be another datacube, an integer or a float
         if x is None or y is None:
             return None
-        elif y.dtype.kind.lower() in ['f', 'i', 'm'] or isinstance(y, xr.DataArray):
+        elif isinstance(y, xr.DataArray) or isinstance(y, int) or isinstance(y, float):
             gt_ar = x > y
             if reduce:
                 return gt_ar.all()
