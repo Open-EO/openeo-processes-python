@@ -2,6 +2,7 @@ import datetime
 import math
 
 import numpy as np
+import xarray as xr
 from openeo_processes.utils import process
 from openeo_processes.utils import str2time
 
@@ -589,8 +590,42 @@ class Gt:
                 return np.zeros(x.shape, dtype=np.bool)
 
     @staticmethod
-    def exec_xar():
-        pass
+    def exec_xar(x, y, reduce=False):
+        """
+        Compares whether `x` is strictly greater than `y`.
+        Remarks:
+            - If any operand is None, the return value is None.
+            - If any operand is not a number or temporal string (date, time or date-time), the process returns False.
+            - Temporal strings can not be compared based on their string representation due to the time zone /
+            time-offset representations.
+
+        Parameters
+        ----------
+        x : xr.DataArray
+            First operand.
+        y : xr.DataArray, integer, float
+            Second operand.
+        reduce : bool, optional
+            If True, one value will be returned.
+            If False, each value in `x` will be compared with the respective value in `y`. Defaults to False.
+
+        Returns
+        -------
+        xr.DataArray: :
+            Returns True if `x` is strictly greater than `y`, None if any operand is None, otherwise False.
+        """
+        
+        ## x has to be a datacube, whereas y can be another datacube, an integer or a float
+        if x is None or y is None:
+            return None
+        elif isinstance(y, xr.DataArray) or isinstance(y, int) or isinstance(y, float):
+            gt_ar = x > y
+            if reduce:
+                return gt_ar.all()
+            else:
+                return gt_ar
+        else:
+            return False
 
     @staticmethod
     def exec_da():
