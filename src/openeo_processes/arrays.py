@@ -333,16 +333,14 @@ class Count:
 
         """
         if condition is None:
-            count = np.sum(is_valid(data), axis=dimension)
-        elif condition is True: # explicit check needed
+            condition = is_valid
+        if condition is True: # explicit check needed
             count = data.shape[dimension]
         elif callable(condition):
             context = context if context is not None else {}
-            data = condition(data, **context)
-            count = np.sum(data, axis=dimension)
+            count = sum(1 for x in data if condition(x, **context))
         else:
-            err_msg = "Data type of condition is not supported."
-            raise ValueError(err_msg)
+            raise ValueError(condition)
 
         return count
 
