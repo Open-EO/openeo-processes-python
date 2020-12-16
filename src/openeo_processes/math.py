@@ -1,5 +1,6 @@
 import builtins
 import numpy as np
+import xarray as xr
 
 try:
     import xarray_extras as xar_addons
@@ -3560,8 +3561,8 @@ class Sum:
 
         Parameters
         ----------
-        data : xr.DataArray
-            An array of numbers. An empty array resolves always with np.nan.
+        data : xr.DataArray or List(xr.DataArray)
+            An xarray DataArray or list thereof. An empty array resolves always with np.nan.
         ignore_nodata : bool, optional
             Indicates whether no-data values are ignored or not. Ignores them by default (=True).
             Setting this flag to False considers no-data values so that np.nan is returned if any value is such a value.
@@ -3583,6 +3584,12 @@ class Sum:
         It is more efficient to add the additional summands after computing the sum along the dimension of the array.
 
         """
+
+        if isinstance(data, list):
+            if isinstance(data[0], xr.DataArray):
+                # Concatenate along dim 'new_dim'
+                data = xr.concat(data, dim='new_dim')
+
         extra_values = extra_values if extra_values is not None else []
 
         if is_empty(data) and len(extra_values) == 0:

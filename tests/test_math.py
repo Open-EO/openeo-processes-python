@@ -297,6 +297,12 @@ class MathTester(unittest.TestCase):
             list(oeop.sum(self.test_data.xr_data_4d)[:, 0, 0].data),
             [14, 140]
             )
+        # Test with input as [xr.DataArray, xr.DataArray]
+        self.assertEqual(
+            (
+             oeop.sum([self.test_data.xr_data_3d, self.test_data.xr_data_3d]) -
+             self.test_data.xr_data_3d * 2
+            ).sum(), 0)
 
     def test_product(self):
         """ Tests `product` function. """
