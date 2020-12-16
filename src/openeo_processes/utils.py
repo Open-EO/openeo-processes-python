@@ -4,6 +4,7 @@ from datetime import timezone, timedelta, datetime
 from typing import Callable
 
 import numpy as np
+import xarray as xr
 
 
 def eval_datatype(data):
@@ -62,19 +63,35 @@ def process(processor):
     def fun_wrapper(*args, **kwargs):
         cls = processor()
 
+        # Workaround to allow mapping correctly also List(xr.DataArray)
+        # TODO: remove automatic conversion from List to np.Array and update all tests
         # Convert lists to numpy arrays
-        args = tuple(list2nparray(a) if isinstance(a, list) else a for a in args)
-        kwargs = {k: (list2nparray(v) if isinstance(v, list) else v) for k, v in kwargs.items()}
+        try:
+            if isinstance(args[0], list) and isinstance(args[0][0], xr.DataArray):
+                datatypes = ["xarray"]
+            else:
+                args = tuple(list2nparray(a) if isinstance(a, list) else a for a in args)
+                kwargs = {k: (list2nparray(v) if isinstance(v, list) else v) for k, v in kwargs.items()}
 
-        # retrieve data types of input (keyword) arguments
-        datatypes = set(eval_datatype(a) for a in args)
-        datatypes.update(eval_datatype(v) for v in kwargs.values())
+                # retrieve data types of input (keyword) arguments
+                datatypes = set(eval_datatype(a) for a in args)
+                datatypes.update(eval_datatype(v) for v in kwargs.values())
+        except IndexError:
+            args = tuple(list2nparray(a) if isinstance(a, list) else a for a in args)
+            kwargs = {k: (list2nparray(v) if isinstance(v, list) else v) for k, v in kwargs.items()}
+
+            # retrieve data types of input (keyword) arguments
+            datatypes = set(eval_datatype(a) for a in args)
+            datatypes.update(eval_datatype(v) for v in kwargs.values())
+
         if "datacube" in datatypes:
             cls_fun = getattr(cls, "exec_odc")
-        elif "numpy" in datatypes:
-            cls_fun = getattr(cls, "exec_np")
         elif "xarray" in datatypes:
             cls_fun = getattr(cls, "exec_xar")
+        elif "numpy" in datatypes and "xarray" in datatypes:
+            cls_fun = getattr(cls, "exec_xar")
+        elif "numpy" in datatypes:
+            cls_fun = getattr(cls, "exec_np")
         elif "dask" in datatypes:
             cls_fun = getattr(cls, "exec_dar")
         elif datatypes.issubset({"int", "float", "NoneType", "str", "bool", "datetime"}):
